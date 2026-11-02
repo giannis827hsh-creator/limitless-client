@@ -19,3 +19,7 @@ The `src/main` tree contains the mod, its modules, GUI, mixins, and resources. O
 ## License
 
 limitless client is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
+
+## Credits
+
+Some feature implementations were adapted from **Anubis 0.9.9** by **4ldenz**, whose supplied source is licensed `GPL-3.0-only`. The adapted work includes Anti Vanish, Sus Chunk Finder, ESP and tracers, and Spawner Notifier. These features were integrated and modified for limitless client.
