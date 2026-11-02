@@ -16,4 +16,6 @@ The distributable file is `build/libs/limitless-client.jar`. Install Fabric Load
 
 The `src/main` tree contains the mod, its modules, GUI, mixins, and resources. Old customer-specific licensing and server tooling are not part of this free release.
 
-No open-source license has been selected yet.
+## License
+
+limitless client is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
