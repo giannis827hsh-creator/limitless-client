@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.mod.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractClientPlayerEntityMixin",
+    "CameraMixin",
+    "ClientPlayerEntityMixin",
+    "EntityLookMixin",
+    "KeyboardInputMixin",
+    "MouseMixin",
+    "EntityRendererMixin",
+    "MinecraftClientMixin",
+    "GameRendererMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "AntiVanishNetworkMixin",
+    "AntiVanishOutgoingMixin",
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

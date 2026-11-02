@@ -1,0 +1,14 @@
+/.gradle/
+/build/
+/run/
+/.idea/
+/.vscode/
+*.iml
+.env
+.env.*
+!.env.example
+*.pk8
+*.private.jwk
+*license-key*.txt
+*license_key*.txt
+*device*.json

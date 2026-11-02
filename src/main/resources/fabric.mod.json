@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "limitless",
+  "version": "${version}",
+  "name": "limitless client",
+  "description": "limitless client for Minecraft 1.21.11.",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.mod.LimitlessClient"
+    ]
+  },
+  "mixins": [
+    "limitless.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "icon": "assets/limitless/icon.png",
+  "accessWidener": "limitless.accesswidener"
+}

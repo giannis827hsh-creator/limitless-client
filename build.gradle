@@ -1,0 +1,63 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version '1.14-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+base { archivesName = project.archives_base_name }
+
+loom {
+    accessWidenerPath = file('src/main/resources/limitless.accesswidener')
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') { expand 'version': project.version }
+}
+
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.named('jar') {
+    destinationDirectory.set(layout.buildDirectory.dir('intermediates'))
+}
+tasks.named('remapJar') {
+    destinationDirectory.set(layout.buildDirectory.dir('libs'))
+    archiveFileName.set('limitless-client.jar')
+}
+
+tasks.register('limitlessRelease') {
+    group = 'build'
+    description = 'Builds the free Fabric mod at build/libs/limitless-client.jar.'
+    dependsOn tasks.named('remapJar')
+    doLast {
+        def jar = tasks.named('remapJar').get().archiveFile.get().asFile
+        new java.util.zip.ZipFile(jar).withCloseable { archive ->
+            for (def required : ['fabric.mod.json', 'limitless.mixins.json',
+                                 'com/example/mod/LimitlessClient.class',
+                                 'com/example/mod/runtime/LimitlessRuntime.class']) {
+                if (archive.getEntry(required) == null)
+                    throw new GradleException("Release JAR is missing ${required}")
+            }
+            if (archive.getEntry('core.dat') != null || archive.getEntry('licenseKey') != null)
+                throw new GradleException('Free release must not contain a license key or protected code bundle.')
+        }
+        println "Free limitless JAR: ${jar}"
+    }
+}
