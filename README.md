@@ -1,6 +1,7 @@
 <p align="center"><img src="src/main/resources/assets/limitless/icon.png" alt="limitless client logo" width="128"></p>
 <h1 align="center">limitless client</h1>
 <p align="center"><strong>A free, open source Minecraft client mod for Fabric 1.21.11.</strong></p>
+<p align="center"><strong>Beta release</strong> — limitless client is still in beta. Some features may have bugs or change as development continues.</p>
 <p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#build-from-source">Build from source</a> · <a href="#license-and-credits">License</a></p>
 
 ## At a glance
