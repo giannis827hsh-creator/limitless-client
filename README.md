@@ -4,6 +4,8 @@
 
 A free Fabric client mod for Minecraft 1.21.11. The client is in beta, so expect some features to change.
 
+Discord: [discord.gg/limitlessclient](https://discord.gg/limitlessclient)
+
 Press **Right Shift** in game to open the module menu. Settings and keybinds are saved in `config/limitless-gui.properties` inside your Minecraft instance.
 
 ## Build and install
