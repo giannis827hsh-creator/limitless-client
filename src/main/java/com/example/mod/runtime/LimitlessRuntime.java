@@ -24,11 +24,13 @@ import com.example.mod.module.ItemESP;
 import com.example.mod.module.LightESP;
 import com.example.mod.module.ModuleKeybinds;
 import com.example.mod.module.ModuleManager;
+import com.example.mod.module.Nametags;
 import com.example.mod.module.PlayerDetection;
 import com.example.mod.module.RegionMap;
 import com.example.mod.module.ShieldBreaker;
 import com.example.mod.module.SkinOverride;
 import com.example.mod.module.SpawnerNotifier;
+import com.example.mod.module.SpawnerNametags;
 import com.example.mod.module.StorageESP;
 import com.example.mod.module.Sprint;
 import com.example.mod.module.SusChunk;
@@ -46,7 +48,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.util.Identifier;
 
-/** Loaded only after the encrypted feature bundle has been defined. */
+/** Registers modules and client callbacks. */
 public final class LimitlessRuntime {
     private LimitlessRuntime() { }
 
@@ -54,6 +56,7 @@ public final class LimitlessRuntime {
         ModuleManager modules = new ModuleManager();
         EspModule esp = new EspModule();
         PlayerDetection playerDetection = new PlayerDetection();
+        Nametags nametags = new Nametags();
         RegionMap regionMap = new RegionMap();
         BlockESP blockEsp = new BlockESP();
         StorageESP storageEsp = new StorageESP();
@@ -65,6 +68,7 @@ public final class LimitlessRuntime {
         ArrayListModule arrayList = new ArrayListModule();
         TargetHUD targetHud = new TargetHUD();
         SpawnerNotifier spawnerNotifier = new SpawnerNotifier();
+        SpawnerNametags spawnerNametags = new SpawnerNametags();
         AutoEat autoEat = new AutoEat();
         AutoTool autoTool = new AutoTool();
         AutoTotem autoTotem = new AutoTotem();
@@ -88,6 +92,7 @@ public final class LimitlessRuntime {
         LimitlessClient.ONLINE_ADMINS = new DonutOnlineAdmins();
         modules.add(esp);
         modules.add(playerDetection);
+        modules.add(nametags);
         modules.add(regionMap);
         modules.add(LimitlessClient.FREECAM);
         modules.add(LimitlessClient.FREELOOK);
@@ -107,6 +112,7 @@ public final class LimitlessRuntime {
         modules.add(LimitlessClient.DONUT_DETECTOR);
         modules.add(LimitlessClient.ONLINE_ADMINS);
         modules.add(spawnerNotifier);
+        modules.add(spawnerNametags);
         modules.add(autoEat);
         modules.add(autoTool);
         modules.add(autoTotem);
@@ -153,6 +159,7 @@ public final class LimitlessRuntime {
             LimitlessClient.DONUT_DETECTOR.tick(client);
             playerDetection.tick(client);
             spawnerNotifier.tick(client);
+            spawnerNametags.tick(client);
             autoEat.tick(client);
             autoTool.tick(client);
             autoTotem.tick(client);
@@ -195,6 +202,9 @@ public final class LimitlessRuntime {
             if (LicenseManager.isLicensed()) spawnerNotifier.renderWorld(context);
         });
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+            if (LicenseManager.isLicensed()) spawnerNametags.renderWorld(context);
+        });
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             if (LicenseManager.isLicensed()) EspTracers.renderWorld(context);
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "array_list"), (context, ticks) -> {
@@ -227,6 +237,9 @@ public final class LimitlessRuntime {
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "player_detection"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) playerDetection.renderHud(context, ticks);
         });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "nametags"), (context, ticks) -> {
+            if (LicenseManager.isLicensed()) nametags.renderHud(context, ticks);
+        });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "region_map"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) regionMap.renderHud(context, ticks);
         });
@@ -244,6 +257,9 @@ public final class LimitlessRuntime {
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "spawner_notifier"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) spawnerNotifier.renderHud(context, ticks);
+        });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "spawner_nametags"), (context, ticks) -> {
+            if (LicenseManager.isLicensed()) spawnerNametags.renderHud(context, ticks);
         });
     }
 }

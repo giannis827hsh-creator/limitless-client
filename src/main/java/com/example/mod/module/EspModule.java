@@ -124,7 +124,7 @@ public final class EspModule extends Module {
         }
     }
 
-    /** Draw tracers in screen space so their origin stays on the crosshair. */
+    /** Collect tracer targets for the next world render pass. */
     public void renderHud(DrawContext context, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !renderTracers.get() || client.world == null || client.player == null

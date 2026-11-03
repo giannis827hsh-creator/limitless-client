@@ -1,11 +1,9 @@
-# Update log
+# Changelog
 
-Changes are recorded here locally. This log does not authorize a GitHub update.
+## November 3, 2026
 
-## 2026-11-03
+- Spawner Nametags shows mob names, distance, and an optional activation range ring.
+- Player Nametags has compact and detailed layouts, with options for health, ping, distance, and equipment.
+- The DonutSMP Region Map shows named regions, Goliath numbers, coordinates, and the player's position.
 
-- Added Region Map to the Donut category using the DonutSMP Goliath layout.
-- Replaced the incorrect Minecraft region grid with named regions, Goliath numbers, a legend, coordinates, and a directional player marker.
-- Added settings for cell size, player marker size and color, text size, opacity, shadow, numbers, legend, and coordinates.
-- Removed Anubis references from source code comments; source attribution remains in the README.
-- Verified the release build with `./gradlew.bat limitlessRelease --offline`. Output: `build/libs/limitless-client.jar`.
+The `limitlessRelease` build passes.

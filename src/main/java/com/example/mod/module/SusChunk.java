@@ -50,7 +50,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 
-/** Original, bounded client-thread construction scanner. A flag is supporting evidence, not proof of ownership. */
+/** Scans loaded chunks for signs of player construction within a tick budget. */
 public final class SusChunk extends Module {
     private static final int MAX_CHUNKS = 1024;
     private static final int MAX_TRACKED_BLOCKS = 4096;

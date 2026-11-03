@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Base class for locally toggled visual features. */
+/** Shared state and settings for client modules. */
 public abstract class Module {
     public enum Category { COMBAT, VISUALS, MOVEMENT, BASEFINDER, MISC, HUD, DONUT }
 
@@ -61,8 +61,7 @@ public abstract class Module {
     public final List<Setting> settings() { return Collections.unmodifiableList(settings); }
     public final boolean isEnabled() { return enabled; }
     public final void setEnabled(boolean enabled) {
-        // All entry points (GUI, keybinds, and saved settings) share this gate.
-        // Keep disabling available even after a lease expires.
+        // All entry points use this gate; disabling must always be possible.
         if (enabled && !LicenseManager.isLicensed()) return;
         if (this.enabled == enabled) return;
         this.enabled = enabled;

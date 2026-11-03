@@ -58,7 +58,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 
-/** Original limitless implementation: observations remain tied to a known staff UUID. */
+/** Tracks staff observations by UUID. */
 public final class DonutStaffDetector extends Module {
     private final BooleanSetting tabStars = addSetting(new BooleanSetting("Recognize staff stars", true));
     private final StringSetting extraNames = addSetting(new StringSetting("Extra staff names", "", 512));
