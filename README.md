@@ -43,4 +43,4 @@ If you report a bug, include your Minecraft and Fabric versions, the steps to re
 
 limitless client is licensed under [GPL-3.0-only](LICENSE).
 
-Some implementations were adapted from Anubis 0.9.9 and 1.0, whose supplied source declares GPL-3.0-only and lists 4ldenz as an author. Those areas include Anti Vanish, Sus Chunk Finder, ESP and tracers, Spawner Notifier, and the DonutSMP Region Map.
+Some code was adapted from Anubis 0.9.9 and 1.0 (GPL-3.0-only), which lists 4ldenz as an author.
