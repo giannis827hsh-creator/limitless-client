@@ -1,6 +1,6 @@
-# limitless client
+<p align="center"><img src="src/main/resources/assets/limitless/icon.png" alt="limitless logo" width="375"></p>
 
-<img src="src/main/resources/assets/limitless/icon.png" alt="limitless logo" width="96">
+# limitless client
 
 A free Fabric client mod for Minecraft 1.21.11. The client is in beta, so expect some features to change.
 
