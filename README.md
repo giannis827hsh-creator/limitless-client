@@ -2,7 +2,7 @@
 <h1 align="center">limitless client</h1>
 <p align="center"><strong>A free, open source Minecraft client mod for Fabric 1.21.11.</strong></p>
 <p align="center"><strong>Beta release</strong> — limitless client is still in beta. Some features may have bugs or change as development continues.</p>
-<p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#build-from-source">Build from source</a> · <a href="#license-and-credits">License</a></p>
+<p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#build-from-source">Build from source</a> · <a href="UPDATES.md">Update log</a> · <a href="#license-and-credits">License</a></p>
 
 ## At a glance
 
@@ -67,4 +67,4 @@ Issues and pull requests are welcome. Please include the Minecraft version, Fabr
 
 limitless client is distributed under the **GNU General Public License v3.0 only**. See [LICENSE](LICENSE) for the full terms. If you distribute a modified version, follow the GPLv3 source and notice requirements.
 
-Some feature implementations were adapted from **Anubis 0.9.9**. Its supplied source declares `GPL-3.0-only` and lists **4ldenz** as an author. Adapted areas include Anti Vanish, Sus Chunk Finder, ESP and tracers, and Spawner Notifier; they were integrated and modified for limitless client.
+Some feature implementations were adapted from **Anubis 0.9.9 and 1.0**. Its supplied source declares `GPL-3.0-only` and lists **4ldenz** as an author. Adapted areas include Anti Vanish, Sus Chunk Finder, ESP and tracers, Spawner Notifier, and the DonutSMP Region Map; they were integrated and modified for limitless client.

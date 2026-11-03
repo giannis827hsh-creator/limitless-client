@@ -25,6 +25,7 @@ import com.example.mod.module.LightESP;
 import com.example.mod.module.ModuleKeybinds;
 import com.example.mod.module.ModuleManager;
 import com.example.mod.module.PlayerDetection;
+import com.example.mod.module.RegionMap;
 import com.example.mod.module.ShieldBreaker;
 import com.example.mod.module.SkinOverride;
 import com.example.mod.module.SpawnerNotifier;
@@ -53,6 +54,7 @@ public final class LimitlessRuntime {
         ModuleManager modules = new ModuleManager();
         EspModule esp = new EspModule();
         PlayerDetection playerDetection = new PlayerDetection();
+        RegionMap regionMap = new RegionMap();
         BlockESP blockEsp = new BlockESP();
         StorageESP storageEsp = new StorageESP();
         HoleESP holeEsp = new HoleESP();
@@ -86,6 +88,7 @@ public final class LimitlessRuntime {
         LimitlessClient.ONLINE_ADMINS = new DonutOnlineAdmins();
         modules.add(esp);
         modules.add(playerDetection);
+        modules.add(regionMap);
         modules.add(LimitlessClient.FREECAM);
         modules.add(LimitlessClient.FREELOOK);
         modules.add(LimitlessClient.FULLBRIGHT);
@@ -223,6 +226,9 @@ public final class LimitlessRuntime {
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "player_detection"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) playerDetection.renderHud(context, ticks);
+        });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "region_map"), (context, ticks) -> {
+            if (LicenseManager.isLicensed()) regionMap.renderHud(context, ticks);
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "limitless_watermark"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) LimitlessClient.WATERMARK.renderHud(context, ticks);
