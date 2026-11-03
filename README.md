@@ -1,4 +1,4 @@
-<p align="center"><img src="src/main/resources/assets/limitless/icon.png" alt="limitless logo" width="375"></p>
+<p align="center"><img src="src/main/resources/assets/limitless/icon.png" alt="limitless logo" width="200"></p>
 
 # limitless client
 
