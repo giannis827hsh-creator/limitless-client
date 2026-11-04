@@ -133,7 +133,7 @@ public final class EspModule extends Module {
         }
 
         float tickProgress = tickCounter.getTickProgress(false);
-        Vec3d playerPos = client.player.getLerpedPos(tickProgress);
+        Vec3d playerPos = EspTracers.origin(client, tickProgress);
         double maxDistanceSquared = range.get() * range.get();
 
         List<EspTracers.Target> targets = new ArrayList<>();

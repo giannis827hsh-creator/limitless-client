@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /** Applies Freecam's detached pose after vanilla updates its normal player camera. */
 @Mixin(Camera.class)
@@ -25,6 +26,14 @@ abstract class CameraMixin {
                 && LimitlessClient.FREELOOK.isActive()) {
             args.set(0, LimitlessClient.FREELOOK.yaw());
             args.set(1, LimitlessClient.FREELOOK.pitch());
+        }
+    }
+
+    @Inject(method = "clipToSpace", at = @At("HEAD"), cancellable = true)
+    private void limitless$freelookThroughWalls(float distance, CallbackInfoReturnable<Float> cir) {
+        if (LicenseManager.isLicensed() && LimitlessClient.FREELOOK != null
+                && LimitlessClient.FREELOOK.isActive() && LimitlessClient.FREELOOK.throughWalls()) {
+            cir.setReturnValue(distance);
         }
     }
 

@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 /** Client-only outlines for storage and farm blocks in already-loaded chunks. */
 public final class StorageESP extends Module {
@@ -54,6 +55,7 @@ public final class StorageESP extends Module {
     private static final int MAX_FARM_CACHED = 4096;
     private static final long FARM_SCAN_BUDGET_NS = 1_500_000L;
     private static final long FARM_RESCAN_TICKS = 120;
+    private static final int MAX_OUTLINES = 48;
 
     private final BooleanSetting renderChests = addSetting(new BooleanSetting("Chests", true));
     private final BooleanSetting renderEnderChests = addSetting(new BooleanSetting("Ender chests", true));
@@ -121,28 +123,25 @@ public final class StorageESP extends Module {
     public void renderHud(DrawContext context, RenderTickCounter ticks) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !tracers.get() || client.player == null || client.world == null) return;
-        List<EspTracers.Target> candidates = new ArrayList<>();
-        Vec3d origin = client.player.getLerpedPos(ticks.getTickProgress(false));
+        Vec3d origin = EspTracers.origin(client, ticks.getTickProgress(false));
         double maxDistanceSq = range.get() * range.get();
+        PriorityQueue<Highlight> nearest = new PriorityQueue<>(MAX_OUTLINES + 1,
+                Comparator.comparingDouble(Highlight::distanceSq).reversed());
         for (BlockEntity entity : loadedBlockEntities) {
             BlockPos pos = entity.getPos();
             int color = containerColor(client.world.getBlockState(pos).getBlock());
-            if (color == 0) continue;
-            Vec3d point = Vec3d.ofCenter(pos);
-            double distanceSq = point.squaredDistanceTo(origin);
-            if (distanceSq <= maxDistanceSq) candidates.add(new EspTracers.Target(point,
-                    useCustomColor.get() ? boxOutlineColor.get() : color, distanceSq));
+            addHighlight(nearest, pos, color, origin, maxDistanceSq);
         }
         for (FarmTarget target : visibleFarm) {
             BlockPos pos = target.pos();
             int color = farmColor(client.world.getBlockState(pos).getBlock());
-            if (color == 0) continue;
-            Vec3d point = Vec3d.ofCenter(pos);
-            double distanceSq = point.squaredDistanceTo(origin);
-            if (distanceSq <= maxDistanceSq) candidates.add(new EspTracers.Target(point,
-                    useCustomColor.get() ? boxOutlineColor.get() : color, distanceSq));
+            addHighlight(nearest, pos, color, origin, maxDistanceSq);
         }
-        EspTracers.draw(context, client, candidates, 24);
+        List<EspTracers.Target> candidates = new ArrayList<>(nearest.size());
+        for (Highlight target : nearest)
+            candidates.add(new EspTracers.Target(Vec3d.ofCenter(target.pos()),
+                    target.color(), target.distanceSq()));
+        EspTracers.draw(context, client, candidates, MAX_OUTLINES);
     }
 
     @Override protected void onEnable() { onWorldLeave(); }
@@ -181,57 +180,44 @@ public final class StorageESP extends Module {
 
             // In 1.21.11 depth behavior is configured on the render pipeline.
             // The shared ESP line pipeline uses NO_DEPTH_TEST and does not write depth.
-            for (BlockEntity blockEntity : loadedBlockEntities) {
-                    BlockPos pos = blockEntity.getPos();
-                    // Read the live world state: a block entity's cached state can lag
-                    // behind chunk updates on some client render paths.
-                    BlockState state = client.world.getBlockState(pos);
-                    Block block = state.getBlock();
-                    int color = containerColor(block);
-                    if (color == 0) continue;
-
-                    double dx = pos.getX() + 0.5 - camera.x;
-                    double dy = pos.getY() + 0.5 - camera.y;
-                    double dz = pos.getZ() + 0.5 - camera.z;
-                    if (dx * dx + dy * dy + dz * dz > maxDistanceSquared) continue;
-                    if (useCustomColor.get()) color = boxOutlineColor.get();
-
-                    // Build an absolute world-space box, matching the entity ESP path.
-                    // This avoids differences in how block-local shape offsets are
-                    // consumed by alternative renderers.
-                    VertexRendering.drawOutline(
-                            matrices,
-                            lines,
-                            VoxelShapes.cuboid(new net.minecraft.util.math.Box(
-                                    pos.getX() + 0.025, pos.getY() + 0.025, pos.getZ() + 0.025,
-                                    pos.getX() + 0.975, pos.getY() + 0.975, pos.getZ() + 0.975
-                            )),
-                            0.0,
-                            0.0,
-                            0.0,
-                            color,
-                            2.0f
-                    );
+            PriorityQueue<Highlight> nearest = new PriorityQueue<>(MAX_OUTLINES + 1,
+                    Comparator.comparingDouble(Highlight::distanceSq).reversed());
+            for (BlockEntity entity : loadedBlockEntities) {
+                BlockPos pos = entity.getPos();
+                BlockState state = client.world.getBlockState(pos);
+                addHighlight(nearest, pos, containerColor(state.getBlock()), camera, maxDistanceSquared);
             }
             for (FarmTarget target : visibleFarm) {
                 BlockPos pos = target.pos();
-                int color = farmColor(client.world.getBlockState(pos).getBlock());
-                if (color == 0) continue;
-                double dx = pos.getX() + 0.5 - camera.x;
-                double dy = pos.getY() + 0.5 - camera.y;
-                double dz = pos.getZ() + 0.5 - camera.z;
-                if (dx * dx + dy * dy + dz * dz > maxDistanceSquared) continue;
-                if (useCustomColor.get()) color = boxOutlineColor.get();
+                addHighlight(nearest, pos, farmColor(client.world.getBlockState(pos).getBlock()),
+                        camera, maxDistanceSquared);
+            }
+            for (Highlight target : nearest) {
+                BlockPos pos = target.pos();
                 VertexRendering.drawOutline(matrices, lines,
                         VoxelShapes.cuboid(new net.minecraft.util.math.Box(
                                 pos.getX() + 0.025, pos.getY() + 0.025, pos.getZ() + 0.025,
                                 pos.getX() + 0.975, pos.getY() + 0.975, pos.getZ() + 0.975)),
-                        0.0, 0.0, 0.0, color, 2.0f);
+                        0.0, 0.0, 0.0, target.color(), 2.0f);
             }
         } finally {
             matrices.pop();
         }
 
+    }
+
+    private void addHighlight(PriorityQueue<Highlight> nearest, BlockPos pos, int color,
+                              Vec3d camera, double maxDistanceSq) {
+        if (color == 0) return;
+        double distanceSq = Vec3d.ofCenter(pos).squaredDistanceTo(camera);
+        if (distanceSq > maxDistanceSq) return;
+        Highlight target = new Highlight(pos,
+                useCustomColor.get() ? boxOutlineColor.get() : color, distanceSq);
+        if (nearest.size() < MAX_OUTLINES) nearest.add(target);
+        else if (distanceSq < nearest.peek().distanceSq()) {
+            nearest.remove();
+            nearest.add(target);
+        }
     }
 
     /** Returns zero for block entities outside the selected container categories. */
@@ -269,8 +255,9 @@ public final class StorageESP extends Module {
     private void refreshLoadedBlockEntities(MinecraftClient client) {
         long worldTime = client.world.getTime();
         double requestedRange = range.get();
-        int centerChunkX = Math.floorDiv(client.player.getBlockX(), 16);
-        int centerChunkZ = Math.floorDiv(client.player.getBlockZ(), 16);
+        Vec3d origin = EspTracers.origin(client, 0);
+        int centerChunkX = Math.floorDiv((int) Math.floor(origin.x), 16);
+        int centerChunkZ = Math.floorDiv((int) Math.floor(origin.z), 16);
         if (cachedWorld == client.world && worldTime >= scannedWorldTime
                 && worldTime - scannedWorldTime < 5 && scannedRange == requestedRange
                 && scannedChunkX == centerChunkX && scannedChunkZ == centerChunkZ) {
@@ -311,8 +298,9 @@ public final class StorageESP extends Module {
             farmWorld = null;
             return;
         }
-        int centerX = Math.floorDiv(client.player.getBlockX(), 16);
-        int centerZ = Math.floorDiv(client.player.getBlockZ(), 16);
+        Vec3d origin = EspTracers.origin(client, 0);
+        int centerX = Math.floorDiv((int) Math.floor(origin.x), 16);
+        int centerZ = Math.floorDiv((int) Math.floor(origin.z), 16);
         int settingsHash = (renderPistons.get() ? 1 : 0) | (renderObservers.get() ? 2 : 0);
         settingsHash = 31 * settingsHash + Double.hashCode(range.get());
         long worldTime = client.world.getTime();
@@ -364,6 +352,7 @@ public final class StorageESP extends Module {
     private void beginFarmScan(MinecraftClient client, int centerX, int centerZ,
                                int settingsHash, long worldTime) {
         farmQueue.clear();
+        Vec3d origin = EspTracers.origin(client, 0);
         double requestedRange = range.get();
         int chunkRadius = Math.min((int) Math.ceil(requestedRange / 16.0),
                 client.options.getClampedViewDistance() + 1);
@@ -371,10 +360,10 @@ public final class StorageESP extends Module {
         for (int x = centerX - chunkRadius; x <= centerX + chunkRadius; x++) {
             for (int z = centerZ - chunkRadius; z <= centerZ + chunkRadius; z++) {
                 if (client.world.getChunkManager().getChunk(x, z, ChunkStatus.FULL, false) == null) continue;
-                double dx = Math.max(0, Math.max(x * 16 - client.player.getX(),
-                        client.player.getX() - (x * 16 + 15)));
-                double dz = Math.max(0, Math.max(z * 16 - client.player.getZ(),
-                        client.player.getZ() - (z * 16 + 15)));
+                double dx = Math.max(0, Math.max(x * 16 - origin.x,
+                        origin.x - (x * 16 + 15)));
+                double dz = Math.max(0, Math.max(z * 16 - origin.z,
+                        origin.z - (z * 16 + 15)));
                 if (dx * dx + dz * dz <= rangeSquared) farmQueue.addLast(new ChunkCoordinate(x, z));
             }
         }
@@ -386,9 +375,9 @@ public final class StorageESP extends Module {
         farmQueue.clear(); farmQueue.addAll(nearest);
         farmWorld = client.world; farmCenterX = centerX; farmCenterZ = centerZ;
         farmSettingsHash = settingsHash;
-        farmOriginX = client.player.getBlockX();
-        farmOriginY = client.player.getBlockY();
-        farmOriginZ = client.player.getBlockZ();
+        farmOriginX = (int) Math.floor(origin.x);
+        farmOriginY = (int) Math.floor(origin.y);
+        farmOriginZ = (int) Math.floor(origin.z);
         nextFarmRescan = worldTime + FARM_RESCAN_TICKS;
     }
 
@@ -446,5 +435,6 @@ public final class StorageESP extends Module {
     private static long chunkKey(int x, int z) { return ((long) x << 32) | (z & 0xffffffffL); }
     private record ChunkCoordinate(int x, int z) { }
     private record FarmTarget(BlockPos pos, Block block) { }
+    private record Highlight(BlockPos pos, int color, double distanceSq) { }
 }
 

@@ -124,7 +124,7 @@ public final class CategoryPanel {
         GuiDraw.outline(ctx, x, y, w, h, 5, GuiDraw.fade(ClickGuiPalette.BORDER, opacity));
         if (headerContains(mx, my)) GuiDraw.rounded(ctx, x + 2, y + 2, w - 4, ClickGuiLayout.HEADER - 4, 3,
                 GuiDraw.fade(ClickGuiPalette.HEADER_HOVER, opacity));
-        String title = tab.name();
+        String title = tab == Tab.HUB ? "CLIENT" : tab.name();
         GuiDraw.text(ctx, font, title, x + (w - font.getWidth(title)) / 2, y + (ClickGuiLayout.HEADER - 8) / 2,
                 GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
         if (collapsed) return;

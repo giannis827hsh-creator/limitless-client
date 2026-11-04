@@ -66,7 +66,7 @@ public final class LightESP extends Module {
 
     public void tick(MinecraftClient client) {
         if (!isEnabled() || client.world == null || client.player == null || client.isPaused()) return;
-        BlockPos player = client.player.getBlockPos();
+        BlockPos player = BlockPos.ofFloored(EspTracers.origin(client, 0));
         int r = radius.get();
         boolean moved = center != null && (Math.abs(player.getX() - center.getX()) > 8
                 || Math.abs(player.getY() - center.getY()) > 8 || Math.abs(player.getZ() - center.getZ()) > 8);
@@ -133,7 +133,7 @@ public final class LightESP extends Module {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !tracers.get() || client.player == null || client.world != world) return;
         List<EspTracers.Target> candidates = new ArrayList<>();
-        Vec3d origin = client.player.getLerpedPos(ticks.getTickProgress(false));
+        Vec3d origin = EspTracers.origin(client, ticks.getTickProgress(false));
         double maxDistanceSq = (double) radius.get() * radius.get() * 3;
         for (BlockPos pos : visible) {
             Vec3d point = Vec3d.ofCenter(pos);

@@ -47,11 +47,12 @@ public final class ItemESP extends Module {
     private List<ItemEntity> targets(MinecraftClient client, float tickProgress) {
         if (client.world == null || client.player == null) return List.of();
         double rangeSq = range.get() * range.get();
+        Vec3d origin = EspTracers.origin(client, tickProgress);
         String raw = itemFilter.get().trim().toLowerCase(Locale.ROOT);
         List<ItemEntity> result = new ArrayList<>();
         for (Entity entity : client.world.getEntities()) {
             if (!(entity instanceof ItemEntity item) || item.isRemoved() || item.getStack().isEmpty()
-                    || item.squaredDistanceTo(client.player) > rangeSq) continue;
+                    || item.getLerpedPos(tickProgress).squaredDistanceTo(origin) > rangeSq) continue;
             if (!raw.isEmpty()) {
                 String id = Registries.ITEM.getId(item.getStack().getItem()).toString();
                 boolean matched = false;
@@ -65,7 +66,7 @@ public final class ItemESP extends Module {
             }
             result.add(item);
         }
-        result.sort(Comparator.comparingDouble(item -> item.squaredDistanceTo(client.player)));
+        result.sort(Comparator.comparingDouble(item -> item.getLerpedPos(tickProgress).squaredDistanceTo(origin)));
         if (result.size() > maxItems.get()) return result.subList(0, maxItems.get());
         return result;
     }
@@ -99,7 +100,8 @@ public final class ItemESP extends Module {
         List<EspTracers.Target> candidates = new ArrayList<>();
         for (ItemEntity item : targets(client, progress)) {
             Vec3d pos = item.getLerpedPos(progress).add(0, item.getHeight() / 2, 0);
-            candidates.add(new EspTracers.Target(pos, color.get(), item.squaredDistanceTo(client.player)));
+            candidates.add(new EspTracers.Target(pos, color.get(), pos.squaredDistanceTo(
+                    EspTracers.origin(client, progress))));
         }
         EspTracers.draw(context, client, candidates, 16);
     }

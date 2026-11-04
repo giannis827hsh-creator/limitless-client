@@ -1,5 +1,6 @@
 package com.example.mod.module;
 
+import com.example.mod.LimitlessClient;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -16,17 +17,27 @@ import net.minecraft.util.math.Vec3d;
 public final class EspTracers {
     public record Target(Vec3d position, int color, double distanceSq) { }
 
-    // HUD callbacks collect targets after the world pass. The next world frame
-    // consumes that immutable snapshot; no HUD-space projection is involved.
     private static final List<Target> pending = new ArrayList<>();
     private static Object pendingWorld;
     private static final int MAX_FRAME_TARGETS = 192;
     private static final int EDGE_SECTORS = 24;
-    private static final double NEAR = 0.07;
-    private static final float LINE_WIDTH_PIXELS = 0.7f;
+    private static final double NEAR = 0.2;
+    private static final float LINE_WIDTH_PIXELS = 1.0f;
     private static int occupiedEdges;
 
     private EspTracers() { }
+
+    public static Vec3d origin(MinecraftClient client, float tickProgress) {
+        if (LimitlessClient.FREECAM != null && LimitlessClient.FREECAM.isActive())
+            return client.gameRenderer.getCamera().getCameraPos();
+        return client.player.getLerpedPos(tickProgress);
+    }
+
+    public static void beginHudFrame(MinecraftClient client) {
+        pending.clear();
+        pendingWorld = client.world;
+        occupiedEdges = 0;
+    }
 
     public static void draw(DrawContext context, MinecraftClient client, List<Target> candidates, int limit) {
         if (client.currentScreen != null || client.player == null || client.world == null
@@ -35,17 +46,19 @@ public final class EspTracers {
             pending.clear();
             pendingWorld = client.world;
         }
-        PriorityQueue<Target> nearest = new PriorityQueue<>(
-                Comparator.comparingDouble(Target::distanceSq).reversed());
+        Vec3d eye = client.gameRenderer.getCamera().getCameraPos();
+        Comparator<Target> byCameraDistance = Comparator.comparingDouble(
+                target -> target.position().squaredDistanceTo(eye));
+        PriorityQueue<Target> nearest = new PriorityQueue<>(byCameraDistance.reversed());
         for (Target target : candidates) {
             if (nearest.size() < limit) nearest.add(target);
-            else if (target.distanceSq() < nearest.peek().distanceSq()) {
+            else if (byCameraDistance.compare(target, nearest.peek()) < 0) {
                 nearest.remove();
                 nearest.add(target);
             }
         }
         List<Target> sorted = new ArrayList<>(nearest);
-        sorted.sort(Comparator.comparingDouble(Target::distanceSq));
+        sorted.sort(byCameraDistance);
         for (Target target : sorted) {
             if (pending.size() >= MAX_FRAME_TARGETS) break;
             pending.add(target);
@@ -104,8 +117,6 @@ public final class EspTracers {
     public static void renderWorld(WorldRenderContext context) {
         MinecraftClient client = MinecraftClient.getInstance();
         List<Target> targets = List.copyOf(pending);
-        pending.clear();
-        occupiedEdges = 0;
         if (pendingWorld != client.world || client.world == null || client.player == null
                 || client.currentScreen != null || targets.isEmpty()) return;
         MatrixStack matrices = context.matrices();
@@ -115,7 +126,7 @@ public final class EspTracers {
         Vec3d eye = context.worldState().cameraRenderState.pos;
         var camera = client.gameRenderer.getCamera();
         Vec3d forward = new Vec3d(camera.getHorizontalPlane()).normalize();
-        Vec3d origin = eye.add(forward.multiply(NEAR));
+        Vec3d origin = forward.multiply(NEAR);
         double fov = client.options.getFov().getValue();
         double pixelPerDepth = 2.0 * Math.tan(Math.toRadians(fov) * 0.5)
                 / Math.max(1, client.getWindow().getFramebufferHeight());
@@ -123,7 +134,6 @@ public final class EspTracers {
 
         matrices.push();
         try {
-            matrices.translate(-eye.x, -eye.y, -eye.z);
             MatrixStack.Entry matrix = matrices.peek();
             for (Target target : targets) {
                 Vec3d delta = target.position().subtract(eye);
@@ -133,6 +143,10 @@ public final class EspTracers {
                 if (depth <= NEAR || !Double.isFinite(depth)) continue;
                 Vec3d side = forward.crossProduct(delta);
                 double sideLength = side.length();
+                if (sideLength < 1.0e-8) {
+                    side = new Vec3d(camera.getDiagonalPlane());
+                    sideLength = side.length();
+                }
                 if (sideLength < 1.0e-8) continue;
                 side = side.multiply(1.0 / sideLength);
                 Vec3d nearOffset = side.multiply(NEAR * pixelPerDepth * LINE_WIDTH_PIXELS * 0.5);
@@ -140,8 +154,8 @@ public final class EspTracers {
                 int color = target.color();
                 color = (Math.min(color >>> 24, 160) << 24) | (color & 0x00ffffff);
                 vertex(quads, matrix, origin.add(nearOffset), color);
-                vertex(quads, matrix, target.position().add(farOffset), color);
-                vertex(quads, matrix, target.position().subtract(farOffset), color);
+                vertex(quads, matrix, delta.add(farOffset), color);
+                vertex(quads, matrix, delta.subtract(farOffset), color);
                 vertex(quads, matrix, origin.subtract(nearOffset), color);
             }
         } finally {

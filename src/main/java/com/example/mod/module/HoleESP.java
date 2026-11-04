@@ -62,10 +62,10 @@ public final class HoleESP extends Module {
     public void renderHud(DrawContext context, RenderTickCounter ticks) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !tracers.get() || client.player == null || holes.isEmpty()) return;
-        Vec3d origin = client.player.getLerpedPos(ticks.getTickProgress(false));
+        Vec3d origin = EspTracers.origin(client, ticks.getTickProgress(false));
         List<EspTracers.Target> candidates = new java.util.ArrayList<>();
         for (Hole hole : holes) {
-            if (!insideRange(hole.pos(), client.player.getBlockPos(), range.get())) continue;
+            if (!insideRange(hole.pos(), BlockPos.ofFloored(origin), range.get())) continue;
             Vec3d point = Vec3d.ofCenter(hole.pos()).add(0, -Math.min(1, hole.depth()) * 0.5, 0);
             candidates.add(new EspTracers.Target(point, hole.safe() ? safeColor.get() : unsafeColor.get(),
                     point.squaredDistanceTo(origin)));
@@ -123,7 +123,7 @@ public final class HoleESP extends Module {
     /** Incremental nearest-first scan. Rendering only consumes the cached highlights. */
     public void tick(MinecraftClient client) {
         if (!isEnabled() || client.world == null || client.player == null || client.isPaused()) return;
-        BlockPos player = client.player.getBlockPos();
+        BlockPos player = BlockPos.ofFloored(EspTracers.origin(client, 0));
         if (scannedWorld != client.world || scannedRange != range.get()) onWorldLeave();
         long tick = client.world.getTime();
         boolean moved = scanOrigin != null && !player.isWithinDistance(scanOrigin, 4);

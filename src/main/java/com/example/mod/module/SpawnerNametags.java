@@ -141,11 +141,11 @@ public final class SpawnerNametags extends Module {
             BlockEntity entity = client.world.getBlockEntity(pos);
             if (!(entity instanceof MobSpawnerBlockEntity spawner)) continue;
             int activation = ((SpawnerLogicAccessor) spawner.getLogic()).limitless$getRequiredPlayerRange();
-            found.add(new Shown(pos, Math.sqrt(distanceSq), mobName(client, spawner, pos),
-                    activation, activation < 0 || distanceSq < (double) activation * activation));
+            found.add(new Shown(pos, Math.sqrt(distanceSq), activation,
+                    activation < 0 || distanceSq < (double) activation * activation));
         }
         found.sort(Comparator.comparingDouble(Shown::distance));
-        return found.size() <= MAX_LABELS ? found : found.subList(0, MAX_LABELS);
+        return found;
     }
 
     private static String mobName(MinecraftClient client, MobSpawnerBlockEntity spawner, BlockPos pos) {
@@ -173,13 +173,13 @@ public final class SpawnerNametags extends Module {
 
     public void renderHud(DrawContext context, RenderTickCounter ticks) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!isEnabled() || client.currentScreen != null || client.options.hudHidden) return;
+        if (!isEnabled() || client.world == null || client.player == null
+                || client.currentScreen != null || client.options.hudHidden) return;
         Camera camera = client.gameRenderer.getCamera();
         Vec3d cameraPos = camera.getCameraPos();
         Vec3d forward = new Vec3d(camera.getHorizontalPlane());
-        List<Shown> shown = inRange(client);
-        for (int i = shown.size() - 1; i >= 0; i--) {
-            Shown item = shown.get(i);
+        List<ProjectedSpawner> visible = new ArrayList<>();
+        for (Shown item : inRange(client)) {
             BlockPos pos = item.pos();
             Vec3d anchor = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
             if (anchor.subtract(cameraPos).dotProduct(forward) <= 0.05) continue;
@@ -190,22 +190,32 @@ public final class SpawnerNametags extends Module {
             float y = (float) ((1 - projected.y) * context.getScaledWindowHeight() / 2);
             float alpha = fade(item.distance());
             if (alpha < 0.02f) continue;
-            String title = item.mob() == null ? "Spawner" : item.mob() + " Spawner";
+            visible.add(new ProjectedSpawner(item, x, y, alpha));
+        }
+        int count = Math.min(MAX_LABELS, visible.size());
+        for (int i = count - 1; i >= 0; i--) {
+            ProjectedSpawner target = visible.get(i);
+            Shown item = target.item();
+            BlockPos pos = item.pos();
+            BlockEntity entity = client.world.getBlockEntity(pos);
+            String mob = entity instanceof MobSpawnerBlockEntity spawner
+                    ? mobName(client, spawner, pos) : null;
+            String title = mob == null ? "Spawner" : mob + " Spawner";
             String detail = Math.round(item.distance()) + "m";
             if (activationRadius.get() && item.range() > 0) {
                 detail += "  ·  " + item.range() + "m range";
             }
             int width = Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(detail)) + 16;
             context.getMatrices().pushMatrix();
-            context.getMatrices().translate(x, y);
+            context.getMatrices().translate(target.x(), target.y());
             GuiDraw.rounded(context, -width / 2, -29, width, 27, 5,
-                    GuiDraw.fade(0xE8120C1F, alpha));
+                    GuiDraw.fade(0xE8120C1F, target.alpha()));
             GuiDraw.outline(context, -width / 2, -29, width, 27, 5,
-                    GuiDraw.fade(Theme.PRIMARY, alpha));
+                    GuiDraw.fade(Theme.PRIMARY, target.alpha()));
             context.drawCenteredTextWithShadow(client.textRenderer, title, 0, -25,
-                    GuiDraw.fade(Theme.TEXT, alpha));
+                    GuiDraw.fade(Theme.TEXT, target.alpha()));
             context.drawCenteredTextWithShadow(client.textRenderer, detail, 0, -14,
-                    GuiDraw.fade(item.inside() ? Theme.PRIMARY : Theme.MUTED_TEXT, alpha));
+                    GuiDraw.fade(item.inside() ? Theme.PRIMARY : Theme.MUTED_TEXT, target.alpha()));
             context.getMatrices().popMatrix();
         }
     }
@@ -223,7 +233,8 @@ public final class SpawnerNametags extends Module {
         try {
             matrices.translate(-camera.x, -camera.y, -camera.z);
             MatrixStack.Entry matrix = matrices.peek();
-            for (Shown item : shown) {
+            for (int index = 0; index < Math.min(MAX_LABELS, shown.size()); index++) {
+                Shown item = shown.get(index);
                 if (item.range() <= 0) continue;
                 int alpha = Math.round(255 * fade(item.distance()) * (item.inside() ? 0.8f : 0.4f));
                 if (alpha < 4) continue;
@@ -256,5 +267,6 @@ public final class SpawnerNametags extends Module {
     }
 
     private record ChunkCoordinate(int x, int z) { }
-    private record Shown(BlockPos pos, double distance, String mob, int range, boolean inside) { }
+    private record Shown(BlockPos pos, double distance, int range, boolean inside) { }
+    private record ProjectedSpawner(Shown item, float x, float y, float alpha) { }
 }

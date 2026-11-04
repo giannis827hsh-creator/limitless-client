@@ -14,7 +14,7 @@ public final class AutoEat extends Module {
     private boolean using;
 
     public AutoEat() {
-        super("Auto Eat", false, Category.COMBAT);
+        super("Auto Eat", false, Category.MISC);
         hunger.describe("Eat hotbar or offhand food when hunger reaches this value. Leaves special foods for manual use.");
     }
 

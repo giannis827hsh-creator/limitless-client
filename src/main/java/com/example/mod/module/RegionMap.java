@@ -16,6 +16,7 @@ public final class RegionMap extends Module {
     };
     private static final int[] LEGEND_ORDER = {0, 1, 2, 4, 3, 5, 6};
 
+    private final NumberSetting mapScale = addSetting(new NumberSetting("Map Scale", 0.5, 0.4, 1, 0.05));
     private final NumberSetting cellSize = addSetting(new NumberSetting("Cell Size", 6, 3, 16, 0.5));
     private final NumberSetting playerScale = addSetting(new NumberSetting("Player Scale", 1, 0.5, 3, 0.1));
     private final NumberSetting textScale = addSetting(new NumberSetting("Text Scale", 1, 0.1, 2, 0.1));
@@ -28,6 +29,7 @@ public final class RegionMap extends Module {
 
     public RegionMap() {
         super("Region Map", false, Category.DONUT);
+        mapScale.describe("Size of the full map panel.");
         cellSize.describe("Size of each DonutSMP map square.");
         playerScale.describe("Size of your marker on the map.");
         textScale.describe("Size of Goliath numbers.");
@@ -40,17 +42,21 @@ public final class RegionMap extends Module {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null || client.currentScreen != null) return;
 
+        float displayScale = (float) mapScale.get();
+        int scaledWidth = (int) (context.getScaledWindowWidth() / displayScale);
         int maxCell = Math.max(3, (context.getScaledWindowHeight() - (legend.get() ? 146 : 62)) / DonutGoliaths.GRID);
         int square = Math.max(3, Math.min((int) Math.round(cellSize.get()), maxCell));
         int mapSize = square * DonutGoliaths.GRID;
         int panelWidth = mapSize + 20;
         int infoHeight = 14 + (coordinates.get() ? 12 : 0) + (legend.get() ? 88 : 0);
         int panelHeight = 31 + mapSize + infoHeight;
-        int panelX = Math.max(8, context.getScaledWindowWidth() - panelWidth - 12);
-        int panelY = 8;
+        int panelX = Math.max(8, scaledWidth - panelWidth - Math.round(12 / displayScale));
+        int panelY = Math.round(8 / displayScale);
         int mapX = panelX + 10;
         int mapY = panelY + 22;
         float alpha = (float) opacity.get();
+        context.getMatrices().pushMatrix();
+        context.getMatrices().scale(displayScale, displayScale);
 
         if (shadow.get()) {
             GuiDraw.rounded(context, panelX + 3, panelY + 4, panelWidth, panelHeight, 7,
@@ -128,6 +134,7 @@ public final class RegionMap extends Module {
                         GuiDraw.fade(0xFFD6CBE4, alpha), false);
             }
         }
+        context.getMatrices().popMatrix();
     }
 
     private static void drawDividers(DrawContext context, int x, int y, int square, float alpha) {

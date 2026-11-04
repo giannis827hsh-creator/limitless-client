@@ -235,7 +235,7 @@ public final class SusChunk extends Module {
         Snapshot previous = cache.get(chunkKey);
         if (previous != null && pos.getY() >= previous.surface[index(pos.getX(), pos.getZ())] - 1) {
             previous.surface[index(pos.getX(), pos.getZ())] = client.world.getTopY(
-                    Heightmap.Type.WORLD_SURFACE, pos.getX(), pos.getZ());
+                    Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ());
         }
         Block old = previous == null ? null : previous.tracked.get(pos);
         if (old == null && work != null && work.key == chunkKey) old = work.tracked.get(pos);
@@ -361,7 +361,8 @@ public final class SusChunk extends Module {
         if (current.geodeJob != null) current.counts.set(Signal.GEODE_MODIFICATION, current.geodeJob.modifiedComponents());
         int[] surface = new int[256];
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            surface[index(x, z)] = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, current.chunkX * 16 + x, current.chunkZ * 16 + z);
+            surface[index(x, z)] = client.world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                    current.chunkX * 16 + x, current.chunkZ * 16 + z);
         }
         if (cache.size() >= MAX_CHUNKS && !cache.containsKey(current.key)) {
             long oldest = cache.values().stream().min(Comparator.comparingLong(s -> s.scannedAt)).orElseThrow().key;
@@ -542,7 +543,7 @@ public final class SusChunk extends Module {
         VertexConsumerProvider consumers = context.consumers();
         if (matrices == null || consumers == null) return;
         Vec3d camera = context.worldState().cameraRenderState.pos;
-        VertexConsumer fills = consumers.getBuffer(EspRenderLayers.FILLED_THROUGH_WALLS);
+        VertexConsumer fills = consumers.getBuffer(EspRenderLayers.TERRAIN_HIGHLIGHT);
         matrices.push();
         try {
             matrices.translate(-camera.x, -camera.y, -camera.z);

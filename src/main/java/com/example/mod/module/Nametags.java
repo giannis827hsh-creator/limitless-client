@@ -58,16 +58,12 @@ public final class Nametags extends Module {
         Vec3d forward = new Vec3d(camera.getHorizontalPlane());
         float partial = ticks.getTickProgress(false);
         double maxSq = range.get() * range.get();
-        List<PlayerEntity> players = new ArrayList<>();
+        List<ProjectedPlayer> visible = new ArrayList<>();
         for (PlayerEntity player : client.world.getPlayers()) {
             if (player == client.player || !player.isAlive() || player.isRemoved()
                     || (!includeInvisible.get() && player.isInvisible())) continue;
-            if (player.squaredDistanceTo(client.player) <= maxSq) players.add(player);
-        }
-        players.sort(Comparator.comparingDouble(player -> player.squaredDistanceTo(client.player)));
-        int count = Math.min(maxTags.get(), players.size());
-        for (int i = count - 1; i >= 0; i--) {
-            PlayerEntity player = players.get(i);
+            double distanceSq = player.squaredDistanceTo(client.player);
+            if (distanceSq > maxSq) continue;
             Vec3d anchor = player.getLerpedPos(partial).add(0, player.getHeight() + 0.28, 0);
             if (anchor.subtract(cameraPos).dotProduct(forward) <= 0.05) continue;
             Vec3d projected = client.gameRenderer.project(anchor);
@@ -75,7 +71,13 @@ public final class Nametags extends Module {
                     || Math.abs(projected.x) > 1.1 || Math.abs(projected.y) > 1.1) continue;
             float x = (float) ((projected.x + 1) * context.getScaledWindowWidth() / 2);
             float y = (float) ((1 - projected.y) * context.getScaledWindowHeight() / 2);
-            drawCard(context, client, player, x, y);
+            visible.add(new ProjectedPlayer(player, distanceSq, x, y));
+        }
+        visible.sort(Comparator.comparingDouble(ProjectedPlayer::distanceSq));
+        int count = Math.min(maxTags.get(), visible.size());
+        for (int i = count - 1; i >= 0; i--) {
+            ProjectedPlayer target = visible.get(i);
+            drawCard(context, client, target.player(), target.x(), target.y());
         }
     }
 
@@ -150,4 +152,6 @@ public final class Nametags extends Module {
             context.getMatrices().popMatrix();
         }
     }
+
+    private record ProjectedPlayer(PlayerEntity player, double distanceSq, float x, float y) { }
 }

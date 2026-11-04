@@ -66,16 +66,17 @@ public final class GlowESP extends Module {
         if (now < nextUpdate) return;
         nextUpdate = now + 250_000_000L;
         double maxDistanceSq = (double) range.get() * range.get();
+        Vec3d origin = EspTracers.origin(client, 0);
         List<Entity> candidates = new ArrayList<>();
         for (Entity entity : client.world.getEntities()) {
             if (entity == client.player || entity.isRemoved()
-                    || entity.squaredDistanceTo(client.player) > maxDistanceSq) continue;
+                    || entity.getEntityPos().squaredDistanceTo(origin) > maxDistanceSq) continue;
             if (entity instanceof PlayerEntity && players.get()
                     || entity instanceof LivingEntity && !(entity instanceof PlayerEntity) && mobs.get()
                     || entity instanceof ItemEntity && items.get()
                     || entity instanceof EndCrystalEntity && crystals.get()) candidates.add(entity);
         }
-        candidates.sort(Comparator.comparingDouble(entity -> entity.squaredDistanceTo(client.player)));
+        candidates.sort(Comparator.comparingDouble(entity -> entity.getEntityPos().squaredDistanceTo(origin)));
         Set<Entity> selected = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
         for (int i = 0; i < Math.min(limit.get(), candidates.size()); i++) selected.add(candidates.get(i));
         visibleTargets = List.copyOf(selected);
@@ -104,7 +105,7 @@ public final class GlowESP extends Module {
             if (entity.isRemoved()) continue;
             Vec3d point = entity.getLerpedPos(progress).add(0, entity.getHeight() / 2, 0);
             candidates.add(new EspTracers.Target(point, tracerColor.get(),
-                    entity.squaredDistanceTo(client.player)));
+                    point.squaredDistanceTo(EspTracers.origin(client, progress))));
         }
         EspTracers.draw(context, client, candidates, 24);
     }

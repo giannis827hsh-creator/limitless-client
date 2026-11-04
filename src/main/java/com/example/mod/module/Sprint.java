@@ -6,7 +6,7 @@ import net.minecraft.client.MinecraftClient;
 public final class Sprint extends Module {
     private boolean holding;
 
-    public Sprint() { super("Sprint", false, Category.COMBAT); }
+    public Sprint() { super("Sprint", false, Category.MISC); }
 
     @Override protected void onDisable() { release(MinecraftClient.getInstance()); }
     @Override public void onWorldLeave() { release(MinecraftClient.getInstance()); }

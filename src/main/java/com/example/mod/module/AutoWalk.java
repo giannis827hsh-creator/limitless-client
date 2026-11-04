@@ -13,7 +13,7 @@ public final class AutoWalk extends Module {
     private KeyBinding held;
 
     public AutoWalk() {
-        super("Auto Walk", false, Category.COMBAT);
+        super("Auto Walk", false, Category.MISC);
         direction.describe("Direction to walk automatically.");
         stopAtUnloaded.describe("Pause before entering a chunk that has not loaded yet.");
     }

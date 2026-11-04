@@ -20,11 +20,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 import java.util.Set;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Saves GUI placement, module bindings, and editable settings outside render/tick callbacks. */
+/** Saves GUI placement, module states, bindings, and editable settings. */
 public final class GuiState {
     private static final Logger LOGGER = LoggerFactory.getLogger("limitless/GUI");
     private static final Set<String> CATEGORIES = Set.of("COMBAT", "RENDER", "MOVEMENT", "MISC", "BASEFINDER", "HUD", "DONUT");
@@ -36,6 +37,7 @@ public final class GuiState {
     private double xFraction = 0.5;
     private double yFraction = 0.5;
     private String category = "RENDER";
+    private boolean restorePending = true;
 
     private GuiState() {
         Path source = Files.isRegularFile(file) ? file :
@@ -128,6 +130,21 @@ public final class GuiState {
         }
     }
 
+    public void restoreEnabledModules(ModuleManager modules, MinecraftClient client) {
+        if (!restorePending || client.player == null || client.world == null
+                || !client.player.isAlive() || client.currentScreen != null
+                || client.getOverlay() != null || client.getCameraEntity() != client.player) return;
+        restorePending = false;
+        for (Module module : modules.all()) {
+            String saved = properties.getProperty("enabled." + module.name());
+            if ("true".equals(saved)) module.setEnabled(true);
+            else if (saved != null && !"false".equals(saved))
+                LOGGER.warn("Ignoring invalid enabled state for {}", module.name());
+        }
+    }
+
+    public void restoreOnNextJoin() { restorePending = true; }
+
     /** Call on drag release, binding changes, or screen removal to persist current state. */
     public void saveModules(ModuleManager modules) {
         properties.setProperty("window.x", Double.toString(xFraction));
@@ -135,6 +152,8 @@ public final class GuiState {
         properties.setProperty("category", category);
         for (Module module : modules.all()) {
             properties.setProperty("bind." + module.name(), Integer.toString(module.keybind()));
+            if (!restorePending)
+                properties.setProperty("enabled." + module.name(), Boolean.toString(module.isEnabled()));
             for (Setting setting : module.settings()) {
                 String saved = null;
                 if (setting instanceof StringSetting string) saved = string.get();
@@ -154,7 +173,7 @@ public final class GuiState {
             Files.createDirectories(file.getParent());
             temporary = Files.createTempFile(file.getParent(), "limitless-gui-", ".tmp");
             try (OutputStream output = Files.newOutputStream(temporary)) {
-                properties.store(output, "limitless Click GUI placement, module keyboard bindings, and settings");
+                properties.store(output, "limitless GUI placement, module states, keybinds, and settings");
             }
             try {
                 Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

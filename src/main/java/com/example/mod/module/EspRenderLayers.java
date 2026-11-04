@@ -41,6 +41,22 @@ final class EspRenderLayers {
             RenderSetup.builder(FILLED_PIPELINE).translucent().build()
     );
 
+    private static final RenderPipeline TERRAIN_HIGHLIGHT_PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+                    .withLocation(Identifier.of("limitless", "pipeline/terrain_highlight"))
+                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
+                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+                    .withDepthWrite(false)
+                    .withBlend(BlendFunction.TRANSLUCENT)
+                    .withCull(false)
+                    .build()
+    );
+
+    static final RenderLayer TERRAIN_HIGHLIGHT = RenderLayer.of(
+            "limitless_terrain_highlight",
+            RenderSetup.builder(TERRAIN_HIGHLIGHT_PIPELINE).translucent().build()
+    );
+
     private EspRenderLayers() {}
 }
 

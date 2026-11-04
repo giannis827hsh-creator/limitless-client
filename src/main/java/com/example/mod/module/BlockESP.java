@@ -119,8 +119,9 @@ public final class BlockESP extends Module {
     /** Incremental, palette-filtered scan with both a cell limit and a time target. */
     public void tick(MinecraftClient client) {
         if (!isEnabled() || client.world == null || client.player == null || client.isPaused()) return;
-        int centerChunkX = client.player.getBlockX() >> 4;
-        int centerChunkZ = client.player.getBlockZ() >> 4;
+        Vec3d origin = EspTracers.origin(client, 0);
+        int centerChunkX = Math.floorDiv((int) Math.floor(origin.x), 16);
+        int centerChunkZ = Math.floorDiv((int) Math.floor(origin.z), 16);
         int settingsHash = settingsHash();
         long worldTime = client.world.getTime();
         boolean selectionChanged = scannedWorld != client.world || settingsHash != scannedSettingsHash;
@@ -201,7 +202,7 @@ public final class BlockESP extends Module {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !tracers.get() || client.player == null || visibleTargets.isEmpty()) return;
         List<EspTracers.Target> candidates = new ArrayList<>();
-        Vec3d origin = client.player.getLerpedPos(ticks.getTickProgress(false));
+        Vec3d origin = EspTracers.origin(client, ticks.getTickProgress(false));
         for (TargetBlock target : visibleTargets) {
             Vec3d point = Vec3d.ofCenter(target.pos());
             candidates.add(new EspTracers.Target(point, colorFor(target.block()), point.squaredDistanceTo(origin)));
@@ -212,6 +213,7 @@ public final class BlockESP extends Module {
     private void beginScan(MinecraftClient client, int centerChunkX, int centerChunkZ,
                            int settingsHash, long worldTime) {
         scanQueue.clear();
+        Vec3d origin = EspTracers.origin(client, 0);
         int configuredRadius = (int) scanRadius.get();
         // Scanning outside the current loaded view cannot find blocks; cap the work to
         // the view distance plus one chunk while keeping the user setting at its chosen value.
@@ -223,7 +225,7 @@ public final class BlockESP extends Module {
                 WorldChunk loaded = client.world.getChunkManager().getChunk(
                         chunkX, chunkZ, ChunkStatus.FULL, false);
                 if (loaded == null) continue;
-                if (!chunkIntersectsRadius(chunkX, chunkZ, client.player.getX(), client.player.getZ(), radiusSquared)) continue;
+                if (!chunkIntersectsRadius(chunkX, chunkZ, origin.x, origin.z, radiusSquared)) continue;
                 scanQueue.addLast(new ChunkCoordinate(chunkX, chunkZ));
             }
         }
@@ -238,9 +240,9 @@ public final class BlockESP extends Module {
         scanCenterChunkZ = centerChunkZ;
         scannedSettingsHash = settingsHash;
         lastFullScanTime = worldTime;
-        scanPlayerX = client.player.getBlockX();
-        scanPlayerY = client.player.getBlockY();
-        scanPlayerZ = client.player.getBlockZ();
+        scanPlayerX = (int) Math.floor(origin.x);
+        scanPlayerY = (int) Math.floor(origin.y);
+        scanPlayerZ = (int) Math.floor(origin.z);
         targetsByChunk.keySet().removeIf(key -> !isChunkInsideScan(key, centerChunkX, centerChunkZ, chunkRadius));
     }
 

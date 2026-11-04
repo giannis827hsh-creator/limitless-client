@@ -11,6 +11,7 @@ import net.minecraft.client.world.ClientWorld;
 /** Turns the camera without changing the player's movement or server-facing rotation. */
 public final class Freelook extends Module {
     private final BooleanSetting thirdPerson = addSetting(new BooleanSetting("Third person view", true));
+    private final BooleanSetting throughWalls = addSetting(new BooleanSetting("Through walls", false));
     private final NumberSetting sensitivity = addSetting(new NumberSetting("Camera sensitivity", 1.0, 0.2, 2.0, 0.1));
     private ClientWorld attachedWorld;
     private ClientPlayerEntity attachedPlayer;
@@ -21,6 +22,7 @@ public final class Freelook extends Module {
     public Freelook() {
         super("Freelook", false, Category.MISC);
         thirdPerson.describe("Switch to rear third person while Freelook is on, then restore your previous view.");
+        throughWalls.describe("Let the third-person camera pass through nearby blocks while Freelook is on.");
         sensitivity.describe("How quickly mouse movement turns the detached camera.");
     }
 
@@ -76,6 +78,7 @@ public final class Freelook extends Module {
 
     public float yaw() { return yaw; }
     public float pitch() { return pitch; }
+    public boolean throughWalls() { return throughWalls.get(); }
 
     private static float wrap(float angle) {
         float wrapped = angle % 360;

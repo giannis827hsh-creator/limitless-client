@@ -53,7 +53,8 @@ public final class TargetESP extends Module {
                 && hit.getEntity() instanceof LivingEntity living
                 && living != client.player && living.isAlive() && !living.isRemoved()
                 && (!playersOnly.get() || living instanceof PlayerEntity)
-                && living.squaredDistanceTo(client.player) <= range.get() * range.get()) {
+                && living.getEntityPos().squaredDistanceTo(EspTracers.origin(client, 0))
+                <= range.get() * range.get()) {
             target = living;
             lastSeen = System.nanoTime();
         } else if (System.nanoTime() - lastSeen > (long) (linger.get() * 1_000_000_000L)) target = null;
@@ -83,10 +84,12 @@ public final class TargetESP extends Module {
     public void renderHud(DrawContext context, RenderTickCounter ticks) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !tracers.get() || target == null || target.isRemoved()
-                || client.player == null || client.world != observedWorld
-                || target.squaredDistanceTo(client.player) > range.get() * range.get()) return;
-        Vec3d point = target.getLerpedPos(ticks.getTickProgress(false)).add(0, target.getHeight() / 2, 0);
+                || client.player == null || client.world != observedWorld) return;
+        float progress = ticks.getTickProgress(false);
+        Vec3d origin = EspTracers.origin(client, progress);
+        if (target.getEntityPos().squaredDistanceTo(origin) > range.get() * range.get()) return;
+        Vec3d point = target.getLerpedPos(progress).add(0, target.getHeight() / 2, 0);
         EspTracers.draw(context, client, java.util.List.of(new EspTracers.Target(
-                point, color.get(), point.squaredDistanceTo(client.player.getEntityPos()))), 1);
+                point, color.get(), point.squaredDistanceTo(origin))), 1);
     }
 }

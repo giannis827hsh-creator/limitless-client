@@ -236,49 +236,40 @@ public final class SpawnerNotifier extends Module {
         }
         if (currentPopup == null) return;
 
-        int width = Math.min(326, context.getScaledWindowWidth() - 24);
+        int width = Math.min(200, context.getScaledWindowWidth() - 20);
         if (width < 130) return;
         int x = (context.getScaledWindowWidth() - width) / 2;
-        int y = 20;
-        int height = 88;
+        int y = 10;
+        int height = 54;
         float remaining = Math.max(0.0f, 1.0f - (float) (now - popupStartedNanos) / duration);
         int alpha = Math.round(255.0f * Math.min(1.0f, Math.min((now - popupStartedNanos) / 200_000_000.0f,
                 (duration - (now - popupStartedNanos)) / 250_000_000.0f)));
         alpha = Math.max(0, Math.min(255, alpha));
         int color = Theme.withAlpha(accent.get(), alpha);
 
-        GuiDraw.rounded(context, x + 2, y + 3, width, height, 18, Theme.withAlpha(0xFF000000, alpha / 3));
-        GuiDraw.rounded(context, x, y, width, height, 18, Theme.withAlpha(0xFF141422, Math.round(alpha * 0.91f)));
-        GuiDraw.outline(context, x, y, width, height, 18, Theme.withAlpha(accent.get(), alpha / 3));
-        GuiDraw.rounded(context, x + 12, y + 14, 50, 50, 12, Theme.withAlpha(0xFF30203C, alpha / 2));
+        GuiDraw.rounded(context, x + 2, y + 2, width, height, 10, Theme.withAlpha(0xFF000000, alpha / 3));
+        GuiDraw.rounded(context, x, y, width, height, 10, Theme.withAlpha(0xFF141422, Math.round(alpha * 0.91f)));
+        GuiDraw.outline(context, x, y, width, height, 10, Theme.withAlpha(accent.get(), alpha / 3));
+        GuiDraw.rounded(context, x + 9, y + 8, 34, 34, 8, Theme.withAlpha(0xFF30203C, alpha / 2));
         context.getMatrices().pushMatrix();
         try {
-            context.getMatrices().translate(x + 21, y + 23);
-            context.getMatrices().scale(2.0f, 2.0f);
+            context.getMatrices().translate(x + 17, y + 16);
+            context.getMatrices().scale(1.125f, 1.125f);
             context.drawItem(SPAWNER_ICON, 0, 0);
         } finally { context.getMatrices().popMatrix(); }
 
-        String title = GuiDraw.fit(client.textRenderer, currentPopup.name() + " Spawner", (int) ((width - 84) / 1.35f));
-        context.getMatrices().pushMatrix();
-        try {
-            context.getMatrices().translate(x + 72, y + 17);
-            context.getMatrices().scale(1.35f, 1.35f);
-            context.drawTextWithShadow(client.textRenderer, title, 0, 0, Theme.withAlpha(Theme.TEXT, alpha));
-        } finally { context.getMatrices().popMatrix(); }
+        String title = GuiDraw.fit(client.textRenderer, currentPopup.name() + " Spawner", width - 58);
+        context.drawTextWithShadow(client.textRenderer, title, x + 51, y + 11,
+                Theme.withAlpha(Theme.TEXT, alpha));
         BlockPos pos = currentPopup.pos();
         String coordinates = "at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
-        coordinates = GuiDraw.fit(client.textRenderer, coordinates, (int) ((width - 84) / 1.18f));
-        context.getMatrices().pushMatrix();
-        try {
-            context.getMatrices().translate(x + 72, y + 39);
-            context.getMatrices().scale(1.18f, 1.18f);
-            context.drawTextWithShadow(client.textRenderer, coordinates, 0, 0,
-                    Theme.withAlpha(Theme.MUTED_TEXT, alpha));
-        } finally { context.getMatrices().popMatrix(); }
-        GuiDraw.rounded(context, x + 16, y + 69, width - 32, 5, 2,
+        coordinates = GuiDraw.fit(client.textRenderer, coordinates, width - 58);
+        context.drawTextWithShadow(client.textRenderer, coordinates, x + 51, y + 25,
+                Theme.withAlpha(Theme.MUTED_TEXT, alpha));
+        GuiDraw.rounded(context, x + 11, y + 45, width - 22, 3, 1,
                 Theme.withAlpha(0xFF6E6875, alpha / 2));
-        int progress = Math.round((width - 32) * remaining);
-        if (progress > 0) GuiDraw.rounded(context, x + 16, y + 69, progress, 5, 2, color);
+        int progress = Math.round((width - 22) * remaining);
+        if (progress > 0) GuiDraw.rounded(context, x + 11, y + 45, progress, 3, 1, color);
     }
 
     private record ChunkCoordinate(int x, int z) { }

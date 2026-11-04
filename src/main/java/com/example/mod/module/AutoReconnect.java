@@ -17,7 +17,7 @@ public final class AutoReconnect extends Module {
     private long reconnectAt;
 
     public AutoReconnect() {
-        super("Auto Reconnect", false, Category.COMBAT);
+        super("Auto Reconnect", false, Category.MISC);
         delay.describe("Seconds to wait on a disconnect screen before reconnecting.");
     }
 

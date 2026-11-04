@@ -12,6 +12,7 @@ import com.example.mod.module.AutoWalk;
 import com.example.mod.module.BlockESP;
 import com.example.mod.module.DonutOnlineAdmins;
 import com.example.mod.module.DonutStaffDetector;
+import com.example.mod.module.DiscordPresence;
 import com.example.mod.module.EspModule;
 import com.example.mod.module.EspTracers;
 import com.example.mod.module.ElytraSwap;
@@ -46,6 +47,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 
 /** Registers modules and client callbacks. */
@@ -79,6 +81,7 @@ public final class LimitlessRuntime {
         ElytraSwap elytraSwap = new ElytraSwap();
         AutoSell autoSell = new AutoSell();
         TpaMacro tpaMacro = new TpaMacro();
+        DiscordPresence discordPresence = new DiscordPresence();
         ShieldBreaker shieldBreaker = new ShieldBreaker();
         TriggerBot triggerBot = new TriggerBot();
         LimitlessClient.MODULES = modules;
@@ -123,12 +126,14 @@ public final class LimitlessRuntime {
         modules.add(elytraSwap);
         modules.add(autoSell);
         modules.add(tpaMacro);
+        modules.add(discordPresence);
         modules.add(shieldBreaker);
         modules.add(triggerBot);
         GuiState.INSTANCE.loadModules(modules);
         modules.disableAll();
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             GuiState.INSTANCE.saveModules(modules);
+            GuiState.INSTANCE.restoreOnNextJoin();
             LimitlessClient.FREECAM.setEnabled(false);
             modules.clearWorldState();
             ModuleKeybinds.reset();
@@ -144,6 +149,7 @@ public final class LimitlessRuntime {
                 modules.disableAll();
                 return;
             }
+            GuiState.INSTANCE.restoreEnabledModules(modules, client);
             ModuleKeybinds.tick(client, modules);
             blockEsp.tick(client);
             holeEsp.tick(client);
@@ -170,6 +176,7 @@ public final class LimitlessRuntime {
             elytraSwap.tick(client);
             autoSell.tick(client);
             tpaMacro.tick(client);
+            discordPresence.tick(client);
             shieldBreaker.tick(client);
             if (!shieldBreaker.actedThisTick()) triggerBot.tick(client);
             LimitlessClient.WATERMARK.tick(client);
@@ -210,6 +217,8 @@ public final class LimitlessRuntime {
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "array_list"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) arrayList.renderHud(context, ticks);
         });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "tracer_frame"), (context, ticks) ->
+                EspTracers.beginHudFrame(MinecraftClient.getInstance()));
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "entity_tracers"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) esp.renderHud(context, ticks);
         });
