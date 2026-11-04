@@ -1,8 +1,8 @@
 # Update log
 
-The November 4 source build completed successfully. Gameplay and visual changes still need in-game verification.
+The 1.15v source build completed successfully. Gameplay and visual changes still need in-game verification.
 
-## November 4, 2026
+## 1.15v — November 4, 2026
 
 ### Added
 
@@ -13,6 +13,7 @@ The November 4 source build completed successfully. Gameplay and visual changes 
 
 ### Changed
 
+- The client version and built JAR filename now include `1.15v`.
 - Module on/off states now save automatically with settings and keybinds and are restored when entering a world. No module or setting is needed to turn this on.
 - Moved Auto Eat, Auto Tool, Auto Reconnect, Auto Walk, and Sprint from Combat to Misc.
 - Reworked Auto Tool switching around predicted block-breaking progress, with a two-tick delay option and Shard Pickaxe preference.

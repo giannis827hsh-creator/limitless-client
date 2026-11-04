@@ -24,7 +24,7 @@ On macOS or Linux:
 ./gradlew limitlessRelease
 ```
 
-Copy `build/libs/limitless-client.jar` into the instance's `mods` folder. This repository does not currently provide a prebuilt release.
+Copy `build/libs/limitless-client-1.15v.jar` into the instance's `mods` folder. A prebuilt JAR is also available on the [GitHub releases page](https://github.com/giannis827hsh-creator/limitless-client/releases).
 
 ## Modules
 

@@ -4,6 +4,8 @@ This is the working record for future update notes. Add an entry after each proj
 
 ## November 4, 2026
 
+- Labeled the November 4 release notes as `1.15v` and noted the versioned JAR. Area: `UPDATES.md`. Verification: text reviewed; no client behavior changed.
+- Set the client and Fabric metadata version to `1.15v`, made the release JAR name `limitless-client-1.15v.jar`, updated build/install instructions, and recorded the future `0.10` version step in workspace instructions. Areas: Gradle metadata, JAR packaging, README, and workflow. Verification: `limitlessRelease --offline` built successfully, the JAR's `fabric.mod.json` reports `1.15v`, and `git diff --check` passed; Minecraft was not launched.
 - Updated `UPDATES.md` for the November 4 source update, covering DiscordPresence, automatic module-state saving, module category moves, Auto Tool, Storage ESP, and visual changes. It marks gameplay verification as pending. Area: release notes. Verification: text reviewed; no client behavior changed.
 - Changed Storage ESP so each of its 48 nearest highlighted blocks has its own tracer. This replaces the earlier grouping of nearby blocks and eight-tracer limit. Area: Storage ESP rendering. Verification: `limitlessRelease --offline` built successfully and `git diff --check` passed; Minecraft has not been launched.
 - Reduced Storage ESP clutter in dense storage and farm areas by limiting outlines to the 48 nearest matching blocks. An earlier eight-tracer limit and grouping were superseded by the entry above. Existing block type, range, color, and saved settings remain available. Area: Storage ESP rendering. Verification: `limitlessRelease --offline` built successfully; the reduced display has not been tested in Minecraft.
