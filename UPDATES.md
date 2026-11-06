@@ -2,7 +2,7 @@
 
 ## 1.25v — in progress
 
-- Reduced HUD watermark and active module list sizes, made ClickGUI search compact, and removed the branding card from the ClickGUI. The gameplay watermark and active module list now hide while editing modules. Build verified; appearance needs an in-game check.
+- Adjusted the HUD watermark and active module list to a middle size, with a Size control for the module list. Made ClickGUI search compact and removed its branding card. The gameplay watermark and active module list hide while editing modules. Appearance needs an in-game check.
 - Remade the ClickGUI and in-game HUD cards with black surfaces, subtle purple glow, clearer labels, and animated controls while keeping the separate category panels and their shapes.
 - Added module search across category panels.
 - Restyled the Block ESP picker, player/spawner nametags, Region Map, Spawner Notifier, Player Detection, staff cards, watermark, active module list, and Target HUD.

@@ -89,7 +89,7 @@ public final class WatermarkHUD extends Module {
         int width = versionEnd + 10;
         if (showFps.get()) width += 19 + font.getWidth("FPS") + font.getWidth(fpsText);
         if (showPing.get()) width += 33 + font.getWidth("Ping") + font.getWidth(pingText);
-        float drawScale = (float) Math.min(Math.min(scale.get(), 1.5 / client.getWindow().getScaleFactor()),
+        float drawScale = (float) Math.min(Math.min(scale.get(), 2.25 * (scale.get() / 0.65) / client.getWindow().getScaleFactor()),
                 Math.max(0.1, (context.getScaledWindowWidth() - 12.0) / width));
         context.getMatrices().pushMatrix();
         try {
