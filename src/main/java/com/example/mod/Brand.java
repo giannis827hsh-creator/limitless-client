@@ -8,6 +8,8 @@ import net.minecraft.util.Identifier;
 public final class Brand {
     public static final String NAME = "limitless client";
     public static final String SHORT_NAME = "limitless";
+    public static final String VERSION = net.fabricmc.loader.api.FabricLoader.getInstance()
+            .getModContainer(LimitlessClient.MOD_ID).orElseThrow().getMetadata().getVersion().getFriendlyString();
     private static final Identifier ICON = Identifier.of(LimitlessClient.MOD_ID, "icon.png");
 
     private Brand() { }

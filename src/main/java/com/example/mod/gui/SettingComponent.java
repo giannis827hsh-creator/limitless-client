@@ -34,7 +34,7 @@ public final class SettingComponent {
     private boolean laidOut;
     private boolean dragging;
     private boolean editing;
-    private float hover;
+    private float hover, toggleProgress;
 
     public SettingComponent(Setting setting) {
         this(setting, false);
@@ -43,6 +43,7 @@ public final class SettingComponent {
     public SettingComponent(Setting setting, boolean compact) {
         this.setting = Objects.requireNonNull(setting, "setting");
         this.compact = compact;
+        toggleProgress = setting instanceof BooleanSetting bool && bool.get() ? 1 : 0;
     }
 
     public boolean isVisible() { return setting.isVisible(); }
@@ -75,23 +76,22 @@ public final class SettingComponent {
         this.y = y;
         this.width = Math.max(24, width);
         laidOut = true;
+        if (setting instanceof BooleanSetting bool)
+            toggleProgress = GuiDraw.approach(toggleProgress, bool.get() ? 1 : 0, 18, dt);
         if (compact) {
             renderCompact(context, renderer, mouseX, mouseY, opacity);
             return;
         }
         boolean hovered = GuiDraw.inside(mouseX, mouseY, x, y, this.width, height() - 4);
         hover = GuiDraw.approach(hover, hovered ? 1.0f : 0.0f, 12.0f, dt);
-        int row = GuiDraw.mix(ClickGuiPalette.PANEL, ClickGuiPalette.HOVER, hover * 0.7f);
+        int row = GuiDraw.mix(ClickGuiPalette.PANEL, ClickGuiPalette.HOVER, hover * 0.35f);
         GuiDraw.rounded(context, x, y, this.width, height() - 4, 5, GuiDraw.fade(row, opacity));
 
         if (setting instanceof BooleanSetting bool) {
             label(context, renderer, setting.label(), x + 10, y + 10, this.width - 56,
                     ClickGuiPalette.TEXT, opacity);
             int switchX = x + this.width - 34;
-            GuiDraw.rounded(context, switchX, y + 9, 24, 12, 6,
-                    GuiDraw.fade(bool.get() ? ClickGuiPalette.PRIMARY : ClickGuiPalette.TRACK, opacity));
-            GuiDraw.rounded(context, switchX + (bool.get() ? 13 : 3), y + 12, 6, 6, 3,
-                    GuiDraw.fade(ClickGuiPalette.TEXT, opacity));
+            GuiDraw.switchControl(context, switchX, y + 9, 24, 12, toggleProgress, opacity);
         } else if (setting instanceof NumberSetting number) {
             renderSlider(context, renderer, format(number.get()),
                     fraction(number.get(), number.min(), number.max()), opacity);
@@ -122,10 +122,7 @@ public final class SettingComponent {
         if (setting instanceof BooleanSetting bool) {
             label(context, renderer, setting.label(), x + 5, y + 6, labelWidth,
                     ClickGuiPalette.TEXT, opacity);
-            GuiDraw.rounded(context, x + width - 27, y + 6, 21, 9, 5,
-                    GuiDraw.fade(bool.get() ? ClickGuiPalette.PRIMARY : ClickGuiPalette.TRACK, opacity));
-            GuiDraw.rounded(context, x + width - 25 + (bool.get() ? 11 : 0), y + 7, 7, 7, 4,
-                    GuiDraw.fade(ClickGuiPalette.TEXT, opacity));
+            GuiDraw.switchControl(context, x + width - 27, y + 6, 21, 9, toggleProgress, opacity);
         } else if (setting instanceof IntegerSetting integer) {
             compactSlider(context, renderer, Integer.toString(integer.get()),
                     fraction(integer.get(), integer.min(), integer.max()), opacity);

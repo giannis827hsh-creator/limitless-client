@@ -6,7 +6,7 @@ import java.util.List;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 
-/** One independently draggable reference-style category window. */
+/** One independently draggable category window. */
 public final class CategoryPanel {
     public enum Tab {
         COMBAT, MISC, DONUT, RENDER, HUB, BASEFINDER;
@@ -26,15 +26,27 @@ public final class CategoryPanel {
     }
     private final Tab tab;
     private final List<ModuleButton> buttons = new ArrayList<>();
+    private List<ModuleButton> filtered = List.of();
     private final List<SettingComponent> inlineSettings = new ArrayList<>();
     private ClickGuiLayout.Rect bounds = new ClickGuiLayout.Rect(0, 0, 0, 0);
     private double x, y, scroll;
     private boolean collapsed;
     private Module expandedModule;
-    private int keybindY = -1;
+    private int keybindY = -1, reservedTop = 8;
+    public void reserveTop(int top) { reservedTop = top; }
     public CategoryPanel(Tab tab, List<Module> modules) {
         this.tab = tab;
         for (Module module : modules) if (tab.accepts(module)) buttons.add(new ModuleButton(module));
+        filtered = List.copyOf(buttons);
+    }
+    public void filter(String query) {
+        String needle = query.strip().toLowerCase(java.util.Locale.ROOT);
+        filtered = buttons.stream().filter(button -> button.module().name()
+                .toLowerCase(java.util.Locale.ROOT).contains(needle)).toList();
+        if (expandedModule != null && filtered.stream().noneMatch(button -> button.module() == expandedModule)) {
+            blurInline(); expandedModule = null; inlineSettings.clear(); keybindY = -1;
+        }
+        scroll = 0;
     }
     public Tab tab() { return tab; }
     public ClickGuiLayout.Rect bounds() { return bounds; }
@@ -43,7 +55,7 @@ public final class CategoryPanel {
     public Module expandedModule() { return expandedModule; }
     public List<SettingComponent> inlineSettings() { return inlineSettings; }
     private int contentHeight() {
-        int height = buttons.size() * ClickGuiLayout.ROW;
+        int height = filtered.size() * ClickGuiLayout.ROW;
         if (expandedModule != null) {
             for (SettingComponent component : inlineSettings) if (component.isVisible()) height += component.height();
             height += 22;
@@ -51,13 +63,13 @@ public final class CategoryPanel {
         return height;
     }
     public void position(double x, double y, int viewportWidth, int viewportHeight) {
-        bounds = ClickGuiLayout.panel(viewportWidth, viewportHeight, x, y, contentHeight(), collapsed);
+        bounds = ClickGuiLayout.panel(viewportWidth, viewportHeight, x, y, contentHeight(), collapsed, reservedTop);
         this.x = bounds.x(); this.y = bounds.y();
         scroll(0);
     }
     public void refresh(int viewportWidth, int viewportHeight) {
         if (!collapsed && bounds.height() != Math.min(ClickGuiLayout.HEADER + Math.max(ClickGuiLayout.ROW,
-                contentHeight()) + 6, viewportHeight - 16)) position(x, y, viewportWidth, viewportHeight);
+                contentHeight()) + 6, Math.max(ClickGuiLayout.HEADER, viewportHeight - reservedTop - 8))) position(x, y, viewportWidth, viewportHeight);
     }
     public void toggleInline(Module module, int viewportWidth, int viewportHeight) {
         if (expandedModule == module) closeInline(viewportWidth, viewportHeight);
@@ -104,7 +116,7 @@ public final class CategoryPanel {
     public ModuleButton hovered(double mx, double my) {
         if (collapsed || my < viewTop() || my >= viewBottom() || !bounds.contains(mx, my)) return null;
         int offset = (int) (my - viewTop() + scroll);
-        for (ModuleButton button : buttons) {
+        for (ModuleButton button : filtered) {
             if (offset < ClickGuiLayout.ROW) return button;
             offset -= ClickGuiLayout.ROW;
             if (button.module() == expandedModule) {
@@ -119,23 +131,30 @@ public final class CategoryPanel {
     public void render(DrawContext ctx, TextRenderer font, double mx, double my, Module settings,
                        float opacity, float dt) {
         int x = bounds.x(), y = bounds.y(), w = bounds.width(), h = bounds.height();
-        GuiDraw.rounded(ctx, x + 2, y + 3, w, h, 5, GuiDraw.fade(0x60000000, opacity));
-        GuiDraw.rounded(ctx, x, y, w, h, 5, GuiDraw.fade(ClickGuiPalette.PANEL, opacity));
-        GuiDraw.outline(ctx, x, y, w, h, 5, GuiDraw.fade(ClickGuiPalette.BORDER, opacity));
+        GuiDraw.surface(ctx, x, y, w, h, 5, ClickGuiPalette.PRIMARY, opacity);
         if (headerContains(mx, my)) GuiDraw.rounded(ctx, x + 2, y + 2, w - 4, ClickGuiLayout.HEADER - 4, 3,
                 GuiDraw.fade(ClickGuiPalette.HEADER_HOVER, opacity));
-        String title = tab == Tab.HUB ? "CLIENT" : tab.name();
-        GuiDraw.text(ctx, font, title, x + (w - font.getWidth(title)) / 2, y + (ClickGuiLayout.HEADER - 8) / 2,
-                GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
+        String title = switch (tab) {
+            case HUB -> "Client";
+            case RENDER -> "Visuals";
+            case BASEFINDER -> "Basefinder";
+            default -> tab.name().charAt(0) + tab.name().substring(1).toLowerCase(java.util.Locale.ROOT);
+        };
+        GuiDraw.rounded(ctx, x + 8, y + 8, 3, 3, 1, GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
+        GuiDraw.text(ctx, font, title, x + 17, y + (ClickGuiLayout.HEADER - 8) / 2,
+                GuiDraw.fade(ClickGuiPalette.TEXT, opacity));
+        String count = collapsed ? "+" : Integer.toString(filtered.size());
+        GuiDraw.text(ctx, font, count, x + w - 9 - font.getWidth(count), y + 6,
+                GuiDraw.fade(ClickGuiPalette.MUTED, opacity));
         if (collapsed) return;
         ctx.fill(x + 7, viewTop() - 1, x + w - 7, viewTop(), GuiDraw.fade(ClickGuiPalette.DIVIDER, opacity));
         ctx.enableScissor(x + 2, viewTop(), x + w - 2, viewBottom());
         try {
-            if (buttons.isEmpty()) GuiDraw.text(ctx, font, "No modules yet", x + 10, viewTop() + 6,
+            if (filtered.isEmpty()) GuiDraw.text(ctx, font, "No modules", x + 10, viewTop() + 6,
                     GuiDraw.fade(ClickGuiPalette.MUTED, opacity));
             int cy = viewTop() - (int) scroll;
             keybindY = -1;
-            for (ModuleButton button : buttons) {
+            for (ModuleButton button : filtered) {
                 button.render(ctx, font, x + 3, cy, w - 6, ClickGuiLayout.ROW,
                         settings == button.module() || expandedModule == button.module(), mx, my, opacity, dt);
                 cy += ClickGuiLayout.ROW;

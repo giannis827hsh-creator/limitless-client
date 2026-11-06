@@ -1,6 +1,7 @@
 package com.example.mod.module;
 
 import com.example.mod.Theme;
+import com.example.mod.gui.GuiDraw;
 import com.example.mod.setting.BooleanSetting;
 import com.example.mod.setting.ColorSetting;
 import net.minecraft.client.MinecraftClient;
@@ -24,6 +25,7 @@ public final class TargetHUD extends Module {
     private LivingEntity displayedTarget;
     private float opacity;
     private float displayedHealth;
+    private long lastFrame;
 
     public TargetHUD() {
         super("Target HUD", false, Category.HUD);
@@ -36,26 +38,29 @@ public final class TargetHUD extends Module {
 
     @Override protected void onDisable() { onWorldLeave(); }
     @Override public void onWorldLeave() {
-        desiredTarget = null; displayedTarget = null; opacity = 0; displayedHealth = 0;
+        desiredTarget = null; displayedTarget = null; opacity = 0; displayedHealth = 0; lastFrame = 0;
     }
 
     public void renderHud(DrawContext context, RenderTickCounter tickCounter) {
         if (!isEnabled() || !targetHud.get()) return;
         MinecraftClient client = MinecraftClient.getInstance();
+        long now = System.nanoTime();
+        float dt = lastFrame == 0 ? 1f / 60 : Math.min(0.05f, (now - lastFrame) / 1_000_000_000f);
+        lastFrame = now;
         LivingEntity candidate = findTarget(client);
         if (candidate != desiredTarget) desiredTarget = candidate;
 
         if (displayedTarget != desiredTarget) {
-            opacity = Math.max(0.0f, opacity - 0.16f);
+            opacity = GuiDraw.approach(opacity, 0, 16, dt);
             if (opacity <= 0.02f) {
                 displayedTarget = desiredTarget;
                 if (displayedTarget != null) displayedHealth = displayedTarget.getHealth();
             }
         } else if (displayedTarget != null) {
-            opacity = Math.min(1.0f, opacity + 0.14f);
-            displayedHealth += (displayedTarget.getHealth() - displayedHealth) * 0.22f;
+            opacity = GuiDraw.approach(opacity, 1, 14, dt);
+            displayedHealth = GuiDraw.approach(displayedHealth, displayedTarget.getHealth(), 12, dt);
         } else {
-            opacity = Math.max(0.0f, opacity - 0.14f);
+            opacity = GuiDraw.approach(opacity, 0, 14, dt);
         }
 
         if (displayedTarget == null || opacity <= 0.01f) return;
@@ -74,18 +79,11 @@ public final class TargetHUD extends Module {
         int x = (context.getScaledWindowWidth() - width) / 2;
         int y = context.getScaledWindowHeight() - height - 42;
         int alpha = Math.round(opacity * 255.0f);
-        int panelAlpha = Math.round(opacity * 217.0f);
-        int accent = Theme.withAlpha(accentColor.get(), alpha);
 
-        context.fill(x + 2, y + 3, x + width + 2, y + height + 3, Theme.withAlpha(Theme.BORDER, alpha / 2));
-        context.fill(x, y, x + width, y + height, Theme.withAlpha(Theme.BORDER, alpha));
-        context.fill(x + 1, y + 1, x + width - 1, y + height - 1,
-                Theme.withAlpha(Theme.PANEL_BACKGROUND, panelAlpha));
-        context.fill(x + 1, y + 1, x + width - 1, y + 2, accent);
-        context.fill(x + 1, y + 2, x + 2, y + height - 1, accent);
+        GuiDraw.surface(context, x, y, width, height, 0, accentColor.get(), opacity);
 
         drawFace(context, target, x + 8, y + 9);
-        String name = target.getName().getString();
+        String name = GuiDraw.fit(client.textRenderer, target.getName().getString(), width - 95);
         context.drawTextWithShadow(client.textRenderer, name, x + 36, y + 7,
                 Theme.withAlpha(Theme.TEXT, alpha));
 
@@ -115,8 +113,8 @@ public final class TargetHUD extends Module {
         for (EquipmentSlot slot : slots) {
             ItemStack stack = target.getEquippedStack(slot);
             int slotWidth = 29;
-            context.fill(itemX, itemY, itemX + 25, itemY + 20,
-                    Theme.withAlpha(Theme.PANEL_BACKGROUND, panelAlpha));
+            GuiDraw.rounded(context, itemX, itemY, 25, 20, 3,
+                    Theme.withAlpha(Theme.SURFACE, alpha));
             if (!stack.isEmpty()) {
                 context.drawItem(stack, itemX + 4, itemY + 1);
                 if (stack.isDamageable()) {

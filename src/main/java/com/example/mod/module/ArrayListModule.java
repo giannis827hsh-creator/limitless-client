@@ -1,6 +1,7 @@
 package com.example.mod.module;
 
 import com.example.mod.Theme;
+import com.example.mod.gui.GuiDraw;
 import com.example.mod.LimitlessClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -23,11 +24,10 @@ public final class ArrayListModule extends Module {
             String label = module.name();
             int textWidth = client.textRenderer.getWidth(label);
             int x = context.getScaledWindowWidth() - textWidth - 8;
-            context.fill(x - 5, y - 3, x + textWidth + 5, y + 12, Theme.BORDER);
-            context.fill(x - 4, y - 2, x + textWidth + 4, y + 11, Theme.PANEL_BACKGROUND);
-            context.fill(x - 4, y - 2, x - 2, y + 11, Theme.PRIMARY);
-            context.drawTextWithShadow(client.textRenderer, label, x, y, Theme.TEXT);
-            y += 13;
+            GuiDraw.surface(context, x - 5, y - 3, textWidth + 10, 15, 0, Theme.PRIMARY, 1);
+            context.fill(x + textWidth + 3, y - 1, x + textWidth + 5, y + 10, Theme.PRIMARY);
+            GuiDraw.text(context, client.textRenderer, label, x, y, Theme.TEXT);
+            y += 17;
         }
     }
 }

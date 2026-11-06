@@ -64,6 +64,9 @@ public final class BlockPickerScreen extends Screen {
         search = addDrawableChild(new TextFieldWidget(textRenderer, x + 12, y + 38,
                 w - 142, 20, Text.literal("Search blocks")));
         search.setMaxLength(64);
+        search.setDrawsBackground(false);
+        search.setEditableColor(ClickGuiPalette.TEXT);
+        search.setUneditableColor(ClickGuiPalette.MUTED);
         search.setPlaceholder(Text.literal("Search blocks..."));
         setInitialFocus(search);
     }
@@ -83,7 +86,7 @@ public final class BlockPickerScreen extends Screen {
     private void save() { module.setSelected(selected); parent.saveStateNow(); }
 
     @Override public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        ctx.fill(0, 0, width, height, 0xD9080810);
+        ctx.fill(0, 0, width, height, ClickGuiPalette.BACKDROP);
         int localMouseX = (int) Math.round(localX(mouseX));
         int localMouseY = (int) Math.round(localY(mouseY));
         ctx.getMatrices().pushMatrix();
@@ -92,8 +95,8 @@ public final class BlockPickerScreen extends Screen {
         ctx.getMatrices().translate(-width / 2.0f, -height / 2.0f);
         try {
         int x = left(), y = top(), w = panelWidth(), h = panelHeight();
-        GuiDraw.rounded(ctx, x, y, w, h, 11, 0xF21C1922);
-        GuiDraw.outline(ctx, x, y, w, h, 11, ClickGuiPalette.BORDER);
+        GuiDraw.surface(ctx, x, y, w, h, 11, ClickGuiPalette.PRIMARY, 1);
+        GuiDraw.rounded(ctx, x + 10, y + 34, w - 138, 26, 5, ClickGuiPalette.INPUT);
         ctx.drawCenteredTextWithShadow(textRenderer, "Blocks", width / 2, y + 12, ClickGuiPalette.TEXT);
         ctx.drawTextWithShadow(textRenderer, "Cancel", x + 12, y + 12, ClickGuiPalette.PRIMARY);
         ctx.drawTextWithShadow(textRenderer, "Options", x + w - 85, y + 12, ClickGuiPalette.MUTED);
@@ -118,7 +121,7 @@ public final class BlockPickerScreen extends Screen {
                     boolean active = selected.contains(block);
                     boolean hovered = GuiDraw.inside(localMouseX, localMouseY, bx, by, CARD - 4, ROW - 3);
                     GuiDraw.rounded(ctx, bx, by, CARD - 4, 32, 6,
-                            active ? 0xFF49305F : hovered ? ClickGuiPalette.HOVER : 0xFF302D34);
+                            active ? ClickGuiPalette.HOVER : hovered ? ClickGuiPalette.TRACK : ClickGuiPalette.INPUT);
                     if (active) GuiDraw.outline(ctx, bx, by, CARD - 4, 32, 6, module.displayColor(block));
                     ctx.drawItem(block.asItem().getDefaultStack(), bx + 11, by + 7);
                     if (active) ctx.fill(bx + 31, by + 23, bx + 37, by + 29, module.displayColor(block));

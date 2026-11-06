@@ -13,11 +13,11 @@ public final class ClickGuiLayout {
     public static float scale(int width, int height) {
         return Math.max(0.1f, Math.min(0.85f, Math.min((width - 24f) / GROUP_WIDTH, (height - 24f) / 320f)));
     }
-    public static Rect panel(int viewportWidth, int viewportHeight, double x, double y, int contentHeight, boolean collapsed) {
+    public static Rect panel(int viewportWidth, int viewportHeight, double x, double y, int contentHeight, boolean collapsed, int top) {
         int h = collapsed ? HEADER : HEADER + Math.max(ROW, contentHeight) + 6;
-        h = Math.min(h, viewportHeight - 16);
+        h = Math.min(h, Math.max(HEADER, viewportHeight - top - 8));
         return new Rect((int) clamp(x, 8, viewportWidth - PANEL_WIDTH - 8),
-                (int) clamp(y, 8, viewportHeight - h - 8), PANEL_WIDTH, h);
+                (int) clamp(y, top, viewportHeight - h - 8), PANEL_WIDTH, h);
     }
     public static Rect drawer(int viewportWidth, int viewportHeight, Rect anchor) {
         int w = Math.min(270, viewportWidth - 16), h = Math.min(310, viewportHeight - 32);

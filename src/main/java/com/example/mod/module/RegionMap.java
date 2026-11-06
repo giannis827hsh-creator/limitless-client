@@ -1,6 +1,7 @@
 package com.example.mod.module;
 
 import com.example.mod.gui.GuiDraw;
+import com.example.mod.Theme;
 import com.example.mod.setting.BooleanSetting;
 import com.example.mod.setting.ColorSetting;
 import com.example.mod.setting.NumberSetting;
@@ -62,12 +63,9 @@ public final class RegionMap extends Module {
             GuiDraw.rounded(context, panelX + 3, panelY + 4, panelWidth, panelHeight, 7,
                     GuiDraw.fade(0x99000000, alpha));
         }
-        GuiDraw.rounded(context, panelX, panelY, panelWidth, panelHeight, 7,
-                GuiDraw.fade(0xED100C19, alpha));
-        GuiDraw.outline(context, panelX, panelY, panelWidth, panelHeight, 7,
-                GuiDraw.fade(0xFF8B5CF6, alpha));
+        GuiDraw.surface(context, panelX, panelY, panelWidth, panelHeight, 7, Theme.PRIMARY, alpha);
         context.drawText(client.textRenderer, "DONUT REGION MAP", mapX, panelY + 8,
-                GuiDraw.fade(0xFFD9C6FF, alpha), false);
+                GuiDraw.fade(Theme.TEXT, alpha), false);
 
         for (int region = 0; region < DonutGoliaths.CELLS.length; region++) {
             int color = GuiDraw.fade(REGION_COLORS[region], alpha);
@@ -117,13 +115,13 @@ public final class RegionMap extends Module {
         int infoY = mapY + mapSize + 7;
         if (coordinates.get()) {
             context.drawText(client.textRenderer, "X " + client.player.getBlockX() + "   Z " + client.player.getBlockZ(),
-                    mapX, infoY, GuiDraw.fade(0xFFC9BDDB, alpha), false);
+                    mapX, infoY, GuiDraw.fade(Theme.MUTED_TEXT, alpha), false);
             infoY += 12;
         }
         String name = here < 0 ? "Outside regions"
                 : (here % 1000 + 1) + "  ·  " + DonutGoliaths.REGIONS[here / 1000];
         context.drawText(client.textRenderer, "Region  " + name, mapX, infoY,
-                GuiDraw.fade(0xFFF3EAFB, alpha), false);
+                GuiDraw.fade(Theme.TEXT, alpha), false);
         if (legend.get()) {
             int legendY = infoY + 16;
             for (int i = 0; i < LEGEND_ORDER.length; i++) {
@@ -131,7 +129,7 @@ public final class RegionMap extends Module {
                 int y = legendY + i * 12;
                 context.fill(mapX, y + 1, mapX + 8, y + 9, GuiDraw.fade(REGION_COLORS[region], alpha));
                 context.drawText(client.textRenderer, DonutGoliaths.REGIONS[region], mapX + 13, y,
-                        GuiDraw.fade(0xFFD6CBE4, alpha), false);
+                        GuiDraw.fade(Theme.MUTED_TEXT, alpha), false);
             }
         }
         context.getMatrices().popMatrix();

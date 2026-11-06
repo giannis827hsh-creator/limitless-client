@@ -113,23 +113,20 @@ public final class Nametags extends Module {
         int height = detailed ? 17 + (!stats.isEmpty() ? 12 : 0) + (!items.isEmpty() ? 19 : 0) : 16;
         float distanceScale = (float) Math.max(0.65, Math.min(1, 14.0 / Math.max(1, client.player.distanceTo(player))));
         float drawScale = (float) scale.get() * distanceScale;
-        int panel = (Math.round(220 * (float) backgroundOpacity.get()) << 24) | 0x120C1F;
+        int panel = (Math.round(220 * (float) backgroundOpacity.get()) << 24) | (Theme.PANEL_BACKGROUND & 0x00FFFFFF);
         context.getMatrices().pushMatrix();
         try {
             context.getMatrices().translate(x, y - 3);
             context.getMatrices().scale(drawScale, drawScale);
             int left = -width / 2;
             int top = -height;
-            GuiDraw.rounded(context, left + 1, top + 2, width, height, 5, 0x66000000);
-            GuiDraw.rounded(context, left, top, width, height, 5, panel);
-            GuiDraw.outline(context, left, top, width, height, 5, 0xAA8B5CF6);
-            context.fill(left + 5, top + 2, left + width - 5, top + 3, accent.get());
-            context.drawText(client.textRenderer, heading, left + 8, top + 6, 0xFFF6F0FF, true);
+            GuiDraw.surface(context, left, top, width, height, 5, accent.get(), 1, panel);
+            context.drawText(client.textRenderer, heading, left + 8, top + 6, Theme.TEXT, true);
             if (detailed) {
                 int row = top + 17;
                 if (!stats.isEmpty()) {
                     int healthColor = player.getHealth() / Math.max(1, player.getMaxHealth()) < 0.3
-                            ? 0xFFFF7676 : 0xFFD0B7FF;
+                            ? 0xFFFF7676 : Theme.MUTED_TEXT;
                     context.drawText(client.textRenderer, stats, left + 8, row, healthColor, false);
                     row += 12;
                 }
@@ -142,7 +139,7 @@ public final class Nametags extends Module {
                     context.getMatrices().popMatrix();
                     if (showDurability.get() && item.isDamageable()) {
                         int fill = Math.round(11f * (1f - (float) item.getDamage() / Math.max(1, item.getMaxDamage())));
-                        context.fill(itemX, row + 13, itemX + 11, row + 14, 0xFF4B3A5D);
+                        context.fill(itemX, row + 13, itemX + 11, row + 14, Theme.TRACK);
                         context.fill(itemX, row + 13, itemX + fill, row + 14, accent.get());
                     }
                     itemX += 15;

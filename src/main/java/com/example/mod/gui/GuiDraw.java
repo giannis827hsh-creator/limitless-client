@@ -8,6 +8,32 @@ import net.minecraft.client.gui.DrawContext;
 public final class GuiDraw {
     private GuiDraw() { }
 
+    public static void surface(DrawContext context, int x, int y, int width, int height,
+                               int radius, int accent, float opacity) {
+        surface(context, x, y, width, height, radius, accent, opacity, Theme.PANEL_BACKGROUND);
+    }
+
+    public static void surface(DrawContext context, int x, int y, int width, int height,
+                               int radius, int accent, float opacity, int background) {
+        for (int spread = 3; spread >= 1; spread--)
+            outline(context, x - spread, y - spread, width + spread * 2, height + spread * 2,
+                    radius + spread, fade(Theme.withAlpha(accent, 5 + (3 - spread) * 3), opacity));
+        rounded(context, x + 1, y + 3, width, height, radius, fade(0x50000000, opacity));
+        rounded(context, x, y, width, height, radius, fade(background, opacity));
+        outline(context, x, y, width, height, radius, fade(Theme.BORDER, opacity));
+        context.fill(x + Math.max(3, radius), y, x + width - Math.max(3, radius), y + 1,
+                fade(Theme.withAlpha(accent, 100), opacity));
+    }
+
+    public static void switchControl(DrawContext context, int x, int y, int width, int height,
+                                     float progress, float opacity) {
+        int knob = height - 2;
+        rounded(context, x, y, width, height, height / 2,
+                fade(mix(Theme.TRACK, Theme.PRIMARY, progress), opacity));
+        rounded(context, x + 1 + Math.round((width - knob - 2) * progress), y + 1,
+                knob, knob, knob / 2, fade(Theme.TEXT, opacity));
+    }
+
     public static void rounded(DrawContext context, int x, int y, int width, int height,
                                int radius, int color) {
         if (width <= 0 || height <= 0 || (color >>> 24) == 0) return;
@@ -34,15 +60,16 @@ public final class GuiDraw {
     public static void outline(DrawContext context, int x, int y, int width, int height, int radius, int color) {
         if (width < 3 || height < 3) return;
         int r = Math.max(1, Math.min(radius, Math.min(width, height) / 2));
-        for (int row = 0; row < height; row++) {
-            int edge = Math.min(row, height - row - 1);
-            int outer = cornerInset(r, edge);
-            if (row == 0 || row == height - 1) {
-                context.fill(x + outer, y + row, x + width - outer, y + row + 1, color);
-            } else {
-                int inner = 1 + cornerInset(r - 1, edge - 1);
-                context.fill(x + outer, y + row, x + inner, y + row + 1, color);
-                context.fill(x + width - inner, y + row, x + width - outer, y + row + 1, color);
+        context.fill(x, y + r, x + 1, y + height - r, color);
+        context.fill(x + width - 1, y + r, x + width, y + height - r, color);
+        for (int edge = 0; edge < r; edge++) {
+            int outer = cornerInset(r, edge), inner = 1 + cornerInset(r - 1, edge - 1);
+            for (int row : new int[] {edge, height - edge - 1}) {
+                if (edge == 0) context.fill(x + outer, y + row, x + width - outer, y + row + 1, color);
+                else {
+                    context.fill(x + outer, y + row, x + inner, y + row + 1, color);
+                    context.fill(x + width - inner, y + row, x + width - outer, y + row + 1, color);
+                }
             }
         }
     }

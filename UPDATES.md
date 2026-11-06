@@ -2,6 +2,11 @@
 
 ## 1.25v — in progress
 
+- Remade the ClickGUI and in-game HUD cards with black surfaces, subtle purple glow, clearer labels, and animated controls while keeping the separate category panels and their shapes.
+- Added module search across category panels.
+- Restyled the Block ESP picker, player/spawner nametags, Region Map, Spawner Notifier, Player Detection, staff cards, watermark, active module list, and Target HUD.
+- The watermark now displays the actual client version. Target HUD fades use elapsed time for consistent animation across frame rates.
+- Visual appearance and input still need an in-game check.
 - Off-screen tracers no longer share a 24-direction limit. This change builds successfully but still needs an in-game check.
 
 ## 1.15v — November 4, 2026

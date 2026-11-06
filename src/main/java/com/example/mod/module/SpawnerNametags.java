@@ -208,10 +208,7 @@ public final class SpawnerNametags extends Module {
             int width = Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(detail)) + 16;
             context.getMatrices().pushMatrix();
             context.getMatrices().translate(target.x(), target.y());
-            GuiDraw.rounded(context, -width / 2, -29, width, 27, 5,
-                    GuiDraw.fade(0xE8120C1F, target.alpha()));
-            GuiDraw.outline(context, -width / 2, -29, width, 27, 5,
-                    GuiDraw.fade(Theme.PRIMARY, target.alpha()));
+            GuiDraw.surface(context, -width / 2, -29, width, 27, 5, Theme.PRIMARY, target.alpha());
             context.drawCenteredTextWithShadow(client.textRenderer, title, 0, -25,
                     GuiDraw.fade(Theme.TEXT, target.alpha()));
             context.drawCenteredTextWithShadow(client.textRenderer, detail, 0, -14,

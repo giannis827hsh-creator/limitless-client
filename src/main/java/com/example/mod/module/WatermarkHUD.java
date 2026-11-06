@@ -1,6 +1,7 @@
 package com.example.mod.module;
 
 import com.example.mod.Theme;
+import com.example.mod.Brand;
 import com.example.mod.gui.GuiDraw;
 import com.example.mod.module.hud.ServerLatency;
 import com.example.mod.setting.BooleanSetting;
@@ -81,7 +82,7 @@ public final class WatermarkHUD extends Module {
         TextRenderer font = client.textRenderer;
         int accent = accentColor.get() | 0xFF000000;
         int brandEnd = 28 + font.getWidth("limitless") + 6;
-        int versionEnd = brandEnd + font.getWidth("v1.0");
+        int versionEnd = brandEnd + font.getWidth(Brand.VERSION);
         int width = versionEnd + 10;
         if (showFps.get()) width += 19 + font.getWidth("FPS") + font.getWidth(fpsText);
         if (showPing.get()) width += 33 + font.getWidth("Ping") + font.getWidth(pingText);
@@ -90,14 +91,11 @@ public final class WatermarkHUD extends Module {
         try {
             context.getMatrices().translate(8, 8);
             context.getMatrices().scale(drawScale, drawScale);
-            GuiDraw.rounded(context, 1, 2, width, 26, 7, 0x66000000);
-            GuiDraw.rounded(context, 0, 0, width, 26, 7, Theme.PANEL_BACKGROUND);
-            GuiDraw.outline(context, 0, 0, width, 26, 7, Theme.withAlpha(accent, 95));
-            GuiDraw.rounded(context, 5, 5, 16, 16, 4, Theme.withAlpha(accent, 45));
-            GuiDraw.outline(context, 5, 5, 16, 16, 4, Theme.withAlpha(accent, 140));
-            GuiDraw.text(context, font, "L", 10, 9, accent);
+            GuiDraw.surface(context, 0, 0, width, 26, 7, accent, 1);
+            GuiDraw.rounded(context, 5, 5, 16, 16, 4, Theme.SURFACE);
+            Brand.drawIcon(context, 5, 5, 16);
             GuiDraw.text(context, font, "limitless", 28, 9, accent);
-            GuiDraw.text(context, font, "v1.0", brandEnd, 9, Theme.MUTED_TEXT);
+            GuiDraw.text(context, font, Brand.VERSION, brandEnd, 9, Theme.MUTED_TEXT);
             int x = versionEnd + 10;
             if (showFps.get()) {
                 divider(context, x); x += 9;

@@ -42,9 +42,8 @@ public final class SettingTooltip {
         if (y + boxHeight > viewportHeight - 25) y = (int) mouseY - boxHeight - 10;
         x = Math.max(8, Math.min(x, viewportWidth - boxWidth - 8));
         y = Math.max(8, Math.min(y, viewportHeight - boxHeight - 25));
-        GuiDraw.rounded(ctx, x + 2, y + 3, boxWidth, boxHeight, 5, GuiDraw.fade(0xA0000000, opacity));
-        GuiDraw.rounded(ctx, x, y, boxWidth, boxHeight, 5, GuiDraw.fade(ClickGuiPalette.TOOLTIP_PANEL, opacity));
-        GuiDraw.outline(ctx, x, y, boxWidth, boxHeight, 5, GuiDraw.fade(ClickGuiPalette.BORDER, opacity));
+        GuiDraw.surface(ctx, x, y, boxWidth, boxHeight, 5, ClickGuiPalette.PRIMARY, opacity,
+                ClickGuiPalette.TOOLTIP_PANEL);
         GuiDraw.text(ctx, font, fittedTitle, x + 10, y + 8, GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
         for (int i = 0; i < lines.size(); i++)
             GuiDraw.text(ctx, font, lines.get(i), x + 10, y + 23 + i * 12, GuiDraw.fade(ClickGuiPalette.TEXT, opacity));

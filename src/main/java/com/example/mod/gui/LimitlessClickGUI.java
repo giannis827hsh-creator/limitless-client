@@ -12,6 +12,7 @@ import java.util.Set;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.input.CharInput;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
@@ -33,6 +34,7 @@ public class LimitlessClickGUI extends Screen {
     private boolean closing, initialized;
     private long lastFrame, noticeUntil;
     private String notice = "";
+    private TextFieldWidget searchBox;
 
     public LimitlessClickGUI() {
         super(Text.literal(Brand.NAME));
@@ -46,6 +48,7 @@ public class LimitlessClickGUI extends Screen {
         viewportHeight = (int) (height / scale);
         int left = (viewportWidth - ClickGuiLayout.GROUP_WIDTH) / 2;
         for (CategoryPanel panel : panels) {
+            panel.reserveTop((int) Math.ceil(40 / scale));
             int order = panel.tab().ordinal();
             double defaultX = left + order * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
             double px = initialized ? panel.x() : GuiState.INSTANCE.panelX(panel.tab().name(),
@@ -57,6 +60,19 @@ public class LimitlessClickGUI extends Screen {
         initialized = true; draggingPanel = null;
         clearFocus(); pressedKeys.clear(); lastFrame = System.nanoTime();
         layoutDrawer();
+        String query = searchBox == null ? "" : searchBox.getText();
+        int searchWidth = Math.min(160, width - 260);
+        searchBox = null;
+        if (searchWidth >= 70) {
+            searchBox = addSelectableChild(new TextFieldWidget(textRenderer, width - searchWidth - 19, 15,
+                    searchWidth, 14, Text.literal("Search modules")));
+            searchBox.setDrawsBackground(false);
+            searchBox.setEditableColor(ClickGuiPalette.TEXT);
+            searchBox.setPlaceholder(Text.literal("Search modules..."));
+            searchBox.setMaxLength(64);
+            searchBox.setChangedListener(value -> panels.forEach(panel -> panel.filter(value)));
+            searchBox.setText(query);
+        } else panels.forEach(panel -> panel.filter(""));
     }
 
     @Override public void render(DrawContext ctx, int mx, int my, float delta) {
@@ -67,8 +83,17 @@ public class LimitlessClickGUI extends Screen {
         if (closing && opacity < 0.015f) { if (client != null) client.setScreen(null); return; }
         mouseX = local(mx); mouseY = local(my);
         renderBackdrop(ctx);
-        Brand.drawIcon(ctx, 9, 7, 22);
-        ctx.drawTextWithShadow(textRenderer, Brand.NAME, 35, 14, ClickGuiPalette.PRIMARY);
+        int brandWidth = textRenderer.getWidth(Brand.NAME) + textRenderer.getWidth(Brand.VERSION) + 52;
+        GuiDraw.surface(ctx, 8, 6, brandWidth, 25, 5, ClickGuiPalette.PRIMARY, opacity);
+        Brand.drawIcon(ctx, 12, 10, 17);
+        GuiDraw.text(ctx, textRenderer, Brand.NAME, 35, 15, GuiDraw.fade(ClickGuiPalette.TEXT, opacity));
+        GuiDraw.text(ctx, textRenderer, Brand.VERSION, brandWidth - textRenderer.getWidth(Brand.VERSION), 15,
+                GuiDraw.fade(ClickGuiPalette.MUTED, opacity));
+        if (searchBox != null && settingsModule == null) {
+            GuiDraw.surface(ctx, searchBox.getX() - 8, 6, searchBox.getWidth() + 16, 25, 5,
+                    ClickGuiPalette.PRIMARY, opacity);
+            searchBox.render(ctx, mx, my, delta);
+        }
         ctx.getMatrices().pushMatrix();
         ctx.getMatrices().scale(scale, scale);
         try {
@@ -89,7 +114,7 @@ public class LimitlessClickGUI extends Screen {
         int glowHeight = Math.max(1, (int) (height * 0.55f));
         for (int col = 0; col < 64; col++) {
             float dx = ((col + 0.5f) / 64f - 0.5f) * 2;
-            int alpha = Math.round(150 * (float) Math.exp(-dx * dx * 9) * opacity);
+            int alpha = Math.round(28 * (float) Math.exp(-dx * dx * 9) * opacity);
             int glow = ClickGuiPalette.PRIMARY & 0x00FFFFFF;
             int top = (alpha << 24) | glow;
             int middle = (Math.round(alpha * 0.20f) << 24) | glow;
@@ -115,14 +140,12 @@ public class LimitlessClickGUI extends Screen {
         int x = drawer.x(), y = drawer.y(), w = drawer.width(), h = drawer.height();
         // Modal capture keeps covered rows from receiving accidental toggles or key bindings.
         ctx.fill(0, 0, viewportWidth, viewportHeight, GuiDraw.fade(0x50030705, opacity));
-        GuiDraw.rounded(ctx, x + 3, y + 4, w, h, 6, GuiDraw.fade(0x80000000, opacity));
-        GuiDraw.rounded(ctx, x, y, w, h, 6, GuiDraw.fade(ClickGuiPalette.MODAL_PANEL, opacity));
-        GuiDraw.outline(ctx, x, y, w, h, 6, GuiDraw.fade(ClickGuiPalette.BORDER, opacity));
-        label(ctx, GuiDraw.fit(textRenderer, settingsModule.name().toUpperCase(java.util.Locale.ROOT), w - 42), x + 12, y + 12, ClickGuiPalette.TEXT);
+        GuiDraw.surface(ctx, x, y, w, h, 6, ClickGuiPalette.PRIMARY, opacity, ClickGuiPalette.MODAL_PANEL);
+        label(ctx, GuiDraw.fit(textRenderer, settingsModule.name(), w - 42), x + 12, y + 12, ClickGuiPalette.TEXT);
         label(ctx, "x", x + w - 20, y + 12, ClickGuiPalette.MUTED);
         label(ctx, "SETTINGS", x + 12, y + 29, ClickGuiPalette.PRIMARY);
-        if (showsStatusBadge(settingsModule)) {
-            String badge = "Undetected";
+        {
+            String badge = settingsModule.isEnabled() ? "Enabled" : "Disabled";
             int bw = textRenderer.getWidth(badge) + 16;
             GuiDraw.rounded(ctx, x + w - bw - 12, y + 26, bw, 16, 8, GuiDraw.fade(ClickGuiPalette.BADGE_BACKGROUND, opacity));
             label(ctx, badge, x + w - bw - 4, y + 30, ClickGuiPalette.PRIMARY);
@@ -201,9 +224,6 @@ public class LimitlessClickGUI extends Screen {
     private void label(DrawContext ctx, String text, int x, int y, int color) {
         GuiDraw.text(ctx, textRenderer, text, x, y, GuiDraw.fade(color, opacity));
     }
-    private static boolean showsStatusBadge(Module module) {
-        return module.name().endsWith("ESP") || module.category() == Module.Category.MISC || module.category() == Module.Category.HUD;
-    }
     private CategoryPanel panelAt(double mx, double my) {
         for (int i = panels.size() - 1; i >= 0; i--) if (panels.get(i).bounds().contains(mx, my)) return panels.get(i);
         return null;
@@ -237,6 +257,16 @@ public class LimitlessClickGUI extends Screen {
     @Override public void mouseMoved(double x, double y) { mouseX = local(x); mouseY = local(y); }
     @Override public boolean mouseClicked(Click click, boolean doubled) {
         if (closing) return true;
+        if (searchBox != null && settingsModule == null) {
+            boolean searchClick = GuiDraw.inside(click.x(), click.y(), searchBox.getX() - 8, 6,
+                    searchBox.getWidth() + 16, 25);
+            searchBox.setFocused(searchClick && click.button() == 0);
+            if (searchClick) {
+                searchBox.mouseClicked(click, doubled);
+                searchBox.setFocused(click.button() == 0);
+                return true;
+            }
+        }
         double mx = local(click.x()), my = local(click.y());
         mouseX = mx; mouseY = my;
         if (settingsModule != null && drawer != null) {
@@ -309,6 +339,11 @@ public class LimitlessClickGUI extends Screen {
     @Override public boolean keyPressed(KeyInput input) {
         if (closing) return true;
         int key = input.key();
+        if (searchBox != null && searchBox.isFocused() && settingsModule == null) {
+            if (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER) searchBox.setFocused(false);
+            else searchBox.keyPressed(input);
+            return true;
+        }
         boolean first = pressedKeys.add(key);
         for (SettingComponent c : components) if (c.isEditing()) return c.keyPressed(input);
         if (!first) return true;
@@ -336,6 +371,8 @@ public class LimitlessClickGUI extends Screen {
     }
     @Override public boolean keyReleased(KeyInput input) { pressedKeys.remove(input.key()); return true; }
     @Override public boolean charTyped(CharInput input) {
+        if (!closing && searchBox != null && searchBox.isFocused() && settingsModule == null)
+            return searchBox.charTyped(input);
         if (!closing) for (SettingComponent c : components) if (c.isEditing()) return c.charTyped(input);
         return true;
     }

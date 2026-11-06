@@ -364,8 +364,7 @@ public final class DonutStaffDetector extends Module {
         float y = Math.max(0, Math.min(hudY.get(), ctx.getScaledWindowHeight() - h * scale));
         ctx.getMatrices().pushMatrix(); ctx.getMatrices().translate(x, y); ctx.getMatrices().scale(scale, scale);
         try {
-            GuiDraw.rounded(ctx, 0, 0, w, h, 5, Theme.PANEL_BACKGROUND);
-            GuiDraw.outline(ctx, 0, 0, w, h, 5, Theme.BORDER);
+            GuiDraw.surface(ctx, 0, 0, w, h, 5, Theme.PRIMARY, 1);
             ctx.drawText(client.textRenderer, "ANTI VANISH", 9, 8, Theme.PRIMARY, false);
             String count = Integer.toString(display.size());
             ctx.drawText(client.textRenderer, count, w - 9 - client.textRenderer.getWidth(count), 8, Theme.MUTED_TEXT, false);
@@ -438,8 +437,7 @@ public final class DonutStaffDetector extends Module {
         y = Math.max(8, Math.min(y, ctx.getScaledWindowHeight() - h * scale - 8));
         ctx.getMatrices().pushMatrix(); ctx.getMatrices().translate(x, y); ctx.getMatrices().scale(scale, scale);
         try {
-            GuiDraw.rounded(ctx, 0, 0, w, h, 6, GuiDraw.fade(0xDF11151B, alpha));
-            GuiDraw.outline(ctx, 0, 0, w, h, 6, GuiDraw.fade(color, alpha * 0.7f));
+            GuiDraw.surface(ctx, 0, 0, w, h, 6, color, alpha);
             ctx.drawTextWithShadow(client.textRenderer, title, (w - titleWidth) / 2, 11, GuiDraw.fade(color, alpha));
             String fitted = GuiDraw.fit(client.textRenderer, detail, w - 20);
             ctx.drawText(client.textRenderer, fitted, (w - client.textRenderer.getWidth(fitted)) / 2, 29,

@@ -130,8 +130,7 @@ public final class PlayerDetection extends Module {
         int rows = Math.min(MAX_HUD_ROWS, nearby.size());
         int width = 150, height = 25 + rows * 11 + (nearby.size() > rows ? 10 : 0);
         int x = 8, y = Math.max(8, context.getScaledWindowHeight() - height - 52);
-        GuiDraw.rounded(context, x, y, width, height, 5, Theme.PANEL_BACKGROUND);
-        GuiDraw.outline(context, x, y, width, height, 5, Theme.BORDER);
+        GuiDraw.surface(context, x, y, width, height, 5, Theme.PRIMARY, 1);
         context.drawTextWithShadow(client.textRenderer, "PLAYERS NEARBY", x + 8, y + 6, Theme.PRIMARY);
         String count = Integer.toString(nearby.size());
         context.drawTextWithShadow(client.textRenderer, count,

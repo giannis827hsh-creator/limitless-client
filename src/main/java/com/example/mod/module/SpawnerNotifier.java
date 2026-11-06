@@ -247,10 +247,8 @@ public final class SpawnerNotifier extends Module {
         alpha = Math.max(0, Math.min(255, alpha));
         int color = Theme.withAlpha(accent.get(), alpha);
 
-        GuiDraw.rounded(context, x + 2, y + 2, width, height, 10, Theme.withAlpha(0xFF000000, alpha / 3));
-        GuiDraw.rounded(context, x, y, width, height, 10, Theme.withAlpha(0xFF141422, Math.round(alpha * 0.91f)));
-        GuiDraw.outline(context, x, y, width, height, 10, Theme.withAlpha(accent.get(), alpha / 3));
-        GuiDraw.rounded(context, x + 9, y + 8, 34, 34, 8, Theme.withAlpha(0xFF30203C, alpha / 2));
+        GuiDraw.surface(context, x, y, width, height, 10, accent.get(), alpha / 255f);
+        GuiDraw.rounded(context, x + 9, y + 8, 34, 34, 8, Theme.withAlpha(Theme.SURFACE, alpha));
         context.getMatrices().pushMatrix();
         try {
             context.getMatrices().translate(x + 17, y + 16);
@@ -267,7 +265,7 @@ public final class SpawnerNotifier extends Module {
         context.drawTextWithShadow(client.textRenderer, coordinates, x + 51, y + 25,
                 Theme.withAlpha(Theme.MUTED_TEXT, alpha));
         GuiDraw.rounded(context, x + 11, y + 45, width - 22, 3, 1,
-                Theme.withAlpha(0xFF6E6875, alpha / 2));
+                Theme.withAlpha(Theme.TRACK, alpha));
         int progress = Math.round((width - 22) * remaining);
         if (progress > 0) GuiDraw.rounded(context, x + 11, y + 45, progress, 3, 1, color);
     }

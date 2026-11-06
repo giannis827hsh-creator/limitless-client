@@ -136,9 +136,6 @@ public final class DonutOnlineAdmins extends Module {
     }
 
     private static void drawPanel(DrawContext context, int width, int height) {
-        GuiDraw.rounded(context, 1, 2, width, height, 5, 0x66000000);
-        GuiDraw.rounded(context, 0, 0, width, height, 5, Theme.BORDER);
-        GuiDraw.rounded(context, 1, 1, width - 2, height - 2, 4, Theme.PANEL_BACKGROUND);
-        context.fill(5, 1, width - 5, 2, Theme.PRIMARY);
+        GuiDraw.surface(context, 0, 0, width, height, 5, Theme.PRIMARY, 1);
     }
 }
