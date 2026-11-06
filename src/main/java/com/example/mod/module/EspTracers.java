@@ -20,10 +20,8 @@ public final class EspTracers {
     private static final List<Target> pending = new ArrayList<>();
     private static Object pendingWorld;
     private static final int MAX_FRAME_TARGETS = 192;
-    private static final int EDGE_SECTORS = 24;
     private static final double NEAR = 0.2;
     private static final float LINE_WIDTH_PIXELS = 1.0f;
-    private static int occupiedEdges;
 
     private EspTracers() { }
 
@@ -36,7 +34,6 @@ public final class EspTracers {
     public static void beginHudFrame(MinecraftClient client) {
         pending.clear();
         pendingWorld = client.world;
-        occupiedEdges = 0;
     }
 
     public static void draw(DrawContext context, MinecraftClient client, List<Target> candidates, int limit) {
@@ -94,12 +91,6 @@ public final class EspTracers {
         x /= ratio;
         y /= ratio;
         double angle = Math.atan2(y, x);
-        int sector = Math.floorMod((int) Math.floor((angle + Math.PI) * EDGE_SECTORS
-                / (Math.PI * 2.0)), EDGE_SECTORS);
-        int bit = 1 << sector;
-        if ((occupiedEdges & bit) != 0) return;
-        occupiedEdges |= bit;
-
         int color = target.color();
         color = (Math.min(color >>> 24, 190) << 24) | (color & 0x00ffffff);
         context.getMatrices().pushMatrix();

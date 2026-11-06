@@ -2,6 +2,11 @@
 
 This is the working record for future update notes. Add an entry after each project change. State what changed, where it changed, and what was actually checked. `UPDATES.md` is the shorter release history; a Discord post should only include items chosen for announcement.
 
+## November 6, 2026
+
+- Started the local 1.25v update: changed `mod_version`, the README build filename, and added an in-progress release note. Areas: Gradle metadata, install instructions, update log. Verification: `limitlessRelease --offline` built `limitless-client-1.25v.jar`, its `fabric.mod.json` reports `1.25v`, and `git diff --check` passed. No GitHub publication.
+- Removed the 24-sector off-screen direction limit so nearby target bearings are not silently omitted by the shared tracer renderer. Area: ESP tracers. Verification: `limitlessRelease --offline` built successfully at 1.25v; the visual behavior has not been tested in Minecraft.
+
 ## November 4, 2026
 
 - Labeled the November 4 release notes as `1.15v` and noted the versioned JAR. Area: `UPDATES.md`. Verification: text reviewed; no client behavior changed.

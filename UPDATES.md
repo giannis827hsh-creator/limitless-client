@@ -1,8 +1,12 @@
 # Update log
 
-The 1.15v source build completed successfully. Gameplay and visual changes still need in-game verification.
+## 1.25v — in progress
+
+- Off-screen tracers no longer share a 24-direction limit. This change builds successfully but still needs an in-game check.
 
 ## 1.15v — November 4, 2026
+
+The 1.15v source build completed successfully. Gameplay and visual changes still need in-game verification.
 
 ### Added
 
