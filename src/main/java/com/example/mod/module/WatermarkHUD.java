@@ -3,6 +3,8 @@ package com.example.mod.module;
 import com.example.mod.Theme;
 import com.example.mod.Brand;
 import com.example.mod.gui.GuiDraw;
+import com.example.mod.gui.LimitlessClickGUI;
+import com.example.mod.gui.BlockPickerScreen;
 import com.example.mod.module.hud.ServerLatency;
 import com.example.mod.setting.BooleanSetting;
 import com.example.mod.setting.ColorSetting;
@@ -79,6 +81,7 @@ public final class WatermarkHUD extends Module {
         if (!isEnabled() || !showWatermark.get()) return;
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null) return;
+        if (client.currentScreen instanceof LimitlessClickGUI || client.currentScreen instanceof BlockPickerScreen) return;
         TextRenderer font = client.textRenderer;
         int accent = accentColor.get() | 0xFF000000;
         int brandEnd = 28 + font.getWidth("limitless") + 6;
@@ -86,10 +89,11 @@ public final class WatermarkHUD extends Module {
         int width = versionEnd + 10;
         if (showFps.get()) width += 19 + font.getWidth("FPS") + font.getWidth(fpsText);
         if (showPing.get()) width += 33 + font.getWidth("Ping") + font.getWidth(pingText);
-        float drawScale = (float) Math.min(scale.get(), Math.max(0.1, (context.getScaledWindowWidth() - 16.0) / width));
+        float drawScale = (float) Math.min(Math.min(scale.get(), 1.5 / client.getWindow().getScaleFactor()),
+                Math.max(0.1, (context.getScaledWindowWidth() - 12.0) / width));
         context.getMatrices().pushMatrix();
         try {
-            context.getMatrices().translate(8, 8);
+            context.getMatrices().translate(6, 6);
             context.getMatrices().scale(drawScale, drawScale);
             GuiDraw.surface(context, 0, 0, width, 26, 7, accent, 1);
             GuiDraw.rounded(context, 5, 5, 16, 16, 4, Theme.SURFACE);

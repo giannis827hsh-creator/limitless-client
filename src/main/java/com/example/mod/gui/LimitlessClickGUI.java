@@ -48,7 +48,7 @@ public class LimitlessClickGUI extends Screen {
         viewportHeight = (int) (height / scale);
         int left = (viewportWidth - ClickGuiLayout.GROUP_WIDTH) / 2;
         for (CategoryPanel panel : panels) {
-            panel.reserveTop((int) Math.ceil(40 / scale));
+            panel.reserveTop(40);
             int order = panel.tab().ordinal();
             double defaultX = left + order * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
             double px = initialized ? panel.x() : GuiState.INSTANCE.panelX(panel.tab().name(),
@@ -61,10 +61,10 @@ public class LimitlessClickGUI extends Screen {
         clearFocus(); pressedKeys.clear(); lastFrame = System.nanoTime();
         layoutDrawer();
         String query = searchBox == null ? "" : searchBox.getText();
-        int searchWidth = Math.min(160, width - 260);
+        int searchWidth = Math.min(150, viewportWidth - 32);
         searchBox = null;
         if (searchWidth >= 70) {
-            searchBox = addSelectableChild(new TextFieldWidget(textRenderer, width - searchWidth - 19, 15,
+            searchBox = addSelectableChild(new TextFieldWidget(textRenderer, viewportWidth - searchWidth - 19, 15,
                     searchWidth, 14, Text.literal("Search modules")));
             searchBox.setDrawsBackground(false);
             searchBox.setEditableColor(ClickGuiPalette.TEXT);
@@ -83,20 +83,14 @@ public class LimitlessClickGUI extends Screen {
         if (closing && opacity < 0.015f) { if (client != null) client.setScreen(null); return; }
         mouseX = local(mx); mouseY = local(my);
         renderBackdrop(ctx);
-        int brandWidth = textRenderer.getWidth(Brand.NAME) + textRenderer.getWidth(Brand.VERSION) + 52;
-        GuiDraw.surface(ctx, 8, 6, brandWidth, 25, 5, ClickGuiPalette.PRIMARY, opacity);
-        Brand.drawIcon(ctx, 12, 10, 17);
-        GuiDraw.text(ctx, textRenderer, Brand.NAME, 35, 15, GuiDraw.fade(ClickGuiPalette.TEXT, opacity));
-        GuiDraw.text(ctx, textRenderer, Brand.VERSION, brandWidth - textRenderer.getWidth(Brand.VERSION), 15,
-                GuiDraw.fade(ClickGuiPalette.MUTED, opacity));
-        if (searchBox != null && settingsModule == null) {
-            GuiDraw.surface(ctx, searchBox.getX() - 8, 6, searchBox.getWidth() + 16, 25, 5,
-                    ClickGuiPalette.PRIMARY, opacity);
-            searchBox.render(ctx, mx, my, delta);
-        }
         ctx.getMatrices().pushMatrix();
         ctx.getMatrices().scale(scale, scale);
         try {
+            if (searchBox != null && settingsModule == null) {
+                GuiDraw.surface(ctx, searchBox.getX() - 8, 6, searchBox.getWidth() + 16, 25, 5,
+                        ClickGuiPalette.PRIMARY, opacity);
+                searchBox.render(ctx, (int) mouseX, (int) mouseY, delta);
+            }
             for (CategoryPanel panel : panels) panel.refresh(viewportWidth, viewportHeight);
             CategoryPanel hovered = settingsModule == null && !closing ? panelAt(mouseX, mouseY) : null;
             for (CategoryPanel panel : panels) panel.render(ctx, textRenderer,
@@ -258,11 +252,11 @@ public class LimitlessClickGUI extends Screen {
     @Override public boolean mouseClicked(Click click, boolean doubled) {
         if (closing) return true;
         if (searchBox != null && settingsModule == null) {
-            boolean searchClick = GuiDraw.inside(click.x(), click.y(), searchBox.getX() - 8, 6,
+            boolean searchClick = GuiDraw.inside(local(click.x()), local(click.y()), searchBox.getX() - 8, 6,
                     searchBox.getWidth() + 16, 25);
             searchBox.setFocused(searchClick && click.button() == 0);
             if (searchClick) {
-                searchBox.mouseClicked(click, doubled);
+                searchBox.mouseClicked(new Click(local(click.x()), local(click.y()), click.buttonInfo()), doubled);
                 searchBox.setFocused(click.button() == 0);
                 return true;
             }
