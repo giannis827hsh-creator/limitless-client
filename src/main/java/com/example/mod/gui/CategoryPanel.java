@@ -9,7 +9,7 @@ import net.minecraft.client.gui.DrawContext;
 /** One independently draggable category window. */
 public final class CategoryPanel {
     public enum Tab {
-        COMBAT, MISC, DONUT, RENDER, HUB, BASEFINDER;
+        COMBAT, MISC, DONUT, BASEFINDER, RENDER, HUB;
         public boolean accepts(Module module) {
             return accepts(module.category());
         }

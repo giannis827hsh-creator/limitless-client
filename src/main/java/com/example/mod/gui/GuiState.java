@@ -67,12 +67,13 @@ public final class GuiState {
         return panelCoordinate(panel, "y", fallback, travel);
     }
     private double panelCoordinate(String panel, String axis, double fallback, double travel) {
-        // Start the six-panel layout with separate defaults, preserving the earlier layout in the file.
+        if (!"2".equals(properties.getProperty("layout.version"))) return fallback;
         String key = "compact.panel." + panel + "." + axis;
         if (!properties.containsKey(key)) return fallback;
         return 8 + readFraction(key, 0.5) * Math.max(0, travel);
     }
     public void panelPosition(String panel, double x, double y, double travelX, double travelY) {
+        properties.setProperty("layout.version", "2");
         properties.setProperty("compact.panel." + panel + ".x", Double.toString(fraction((x - 8) / Math.max(1, travelX), 0.5)));
         properties.setProperty("compact.panel." + panel + ".y", Double.toString(fraction((y - 8) / Math.max(1, travelY), 0.5)));
     }

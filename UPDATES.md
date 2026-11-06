@@ -2,6 +2,7 @@
 
 ## 1.25v — in progress
 
+- Arranged the ClickGUI panels as Combat, Misc, Donut, Basefinder, Visuals, and Client, with Search in its own panel at the right. Existing panel positions reset once to show the new layout; later dragging still saves normally. The layout needs an in-game appearance check.
 - Adjusted the HUD watermark and active module list to a middle size, with a Size control for the module list. Made ClickGUI search compact and removed its branding card. The gameplay watermark and active module list hide while editing modules. Appearance needs an in-game check.
 - Remade the ClickGUI and in-game HUD cards with black surfaces, subtle purple glow, clearer labels, and animated controls while keeping the separate category panels and their shapes.
 - Added module search across category panels.

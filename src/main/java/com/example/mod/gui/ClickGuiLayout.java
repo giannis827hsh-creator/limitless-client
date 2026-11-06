@@ -2,7 +2,7 @@ package com.example.mod.gui;
 
 /** Logical coordinates shared by rendering, clipping, pointer input and saved positions. */
 public final class ClickGuiLayout {
-    public static final int PANEL_COUNT = 6;
+    public static final int PANEL_COUNT = 7;
     public static final int PANEL_WIDTH = 140, GAP = 10, HEADER = 20, ROW = 17;
     public static final int GROUP_WIDTH = PANEL_WIDTH * PANEL_COUNT + GAP * (PANEL_COUNT - 1);
     public record Rect(int x, int y, int width, int height) {
