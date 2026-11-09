@@ -4,6 +4,7 @@ import com.example.mod.Brand;
 import com.example.mod.LimitlessClient;
 import com.example.mod.module.Module;
 import com.example.mod.module.BlockESP;
+import com.example.mod.module.CustomSky;
 import com.example.mod.module.SusChunk;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,6 +35,7 @@ public class LimitlessClickGUI extends Screen {
     private boolean closing, initialized;
     private long lastFrame, noticeUntil;
     private String notice = "";
+    private boolean skyPreviewNight;
     private TextFieldWidget searchBox;
     private int searchX, searchY;
 
@@ -108,6 +110,7 @@ public class LimitlessClickGUI extends Screen {
                     panel == hovered ? mouseX : -10000, panel == hovered ? mouseY : -10000,
                     settingsModule, opacity, dt);
             if (settingsModule != null) renderSettings(ctx, dt);
+            if (settingsModule == null) renderConfigsButton(ctx);
             renderHint(ctx, now);
             renderSettingTooltip(ctx, now);
         } finally { ctx.getMatrices().popMatrix(); }
@@ -133,7 +136,7 @@ public class LimitlessClickGUI extends Screen {
         drawer = settingsAnchor == null ? null : ClickGuiLayout.drawer(viewportWidth, viewportHeight, settingsAnchor.bounds());
         settingsScroll = ClickGuiLayout.clamp(settingsScroll, 0, maxSettingsScroll());
     }
-    private int settingsTop() { return drawer.y() + 91; }
+    private int settingsTop() { return drawer.y() + (settingsModule instanceof CustomSky ? 169 : 91); }
     private int settingsBottom() { return drawer.y() + drawer.height() - 10; }
     private int settingsContentHeight() { return components.stream().filter(SettingComponent::isVisible).mapToInt(c -> c.height() + 5).sum(); }
     private double maxSettingsScroll() {
@@ -160,6 +163,7 @@ public class LimitlessClickGUI extends Screen {
         label(ctx, "Keybind", x + 18, y + 62, ClickGuiPalette.TEXT);
         String key = GuiDraw.fit(textRenderer, bindingModule == settingsModule ? "Press a key..." : settingsModule.keyName(), w - 105);
         label(ctx, key, x + w - 18 - textRenderer.getWidth(key), y + 62, ClickGuiPalette.PRIMARY);
+        if (settingsModule instanceof CustomSky sky) renderSkyPreview(ctx, sky, x, y, w);
         ctx.enableScissor(x + 8, settingsTop(), x + w - 8, settingsBottom());
         try {
             int cy = settingsTop() - (int) settingsScroll;
@@ -183,6 +187,29 @@ public class LimitlessClickGUI extends Screen {
             GuiDraw.rounded(ctx, x + w - 5, settingsTop() + offset, 2, thumb, 1, GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
         }
     }
+    private void renderSkyPreview(DrawContext ctx, CustomSky sky, int x, int y, int w) {
+        int left = x + 12, right = x + w - 12;
+        int color = sky.previewColor(skyPreviewNight);
+        int accent = sky.previewAccent();
+        ctx.fillGradient(left, y + 89, right, y + 132, color,
+                0xFF000000 | GuiDraw.mix(color, accent, 0.35f) & 0xFFFFFF);
+        if (skyPreviewNight) {
+            for (int i = 0; i < 9; i++) {
+                int sx = left + 10 + (i * 37) % Math.max(1, right - left - 20);
+                int sy = y + 94 + (i * 17) % 29;
+                ctx.fill(sx, sy, sx + 1, sy + 1, 0xBFEFE8FF);
+            }
+        }
+        label(ctx, "Preview", left + 5, y + 94, 0xFFFFFFFF);
+        int half = (right - left - 4) / 2;
+        GuiDraw.rounded(ctx, left, y + 138, half, 21, 3,
+                GuiDraw.fade(skyPreviewNight ? ClickGuiPalette.INPUT : ClickGuiPalette.PRIMARY, opacity));
+        GuiDraw.rounded(ctx, left + half + 4, y + 138, half, 21, 3,
+                GuiDraw.fade(skyPreviewNight ? ClickGuiPalette.PRIMARY : ClickGuiPalette.INPUT, opacity));
+        label(ctx, "Day", left + half / 2 - textRenderer.getWidth("Day") / 2, y + 144, ClickGuiPalette.TEXT);
+        label(ctx, "Night", left + half + 4 + half / 2 - textRenderer.getWidth("Night") / 2,
+                y + 144, ClickGuiPalette.TEXT);
+    }
     private void renderHint(DrawContext ctx, long now) {
         String text = now < noticeUntil ? notice : bindingModule != null
                 ? "Press a key / Delete clears / Esc cancels" : settingsModule != null
@@ -194,6 +221,14 @@ public class LimitlessClickGUI extends Screen {
         text = GuiDraw.fit(textRenderer, text, viewportWidth - 32);
         int x = (viewportWidth - textRenderer.getWidth(text)) / 2;
         label(ctx, text, x, viewportHeight - 17, ClickGuiPalette.MUTED);
+    }
+    private int configsX() { return (viewportWidth - 92) / 2; }
+    private int configsY() { return viewportHeight - 43; }
+    private void renderConfigsButton(DrawContext ctx) {
+        int x = configsX(), y = configsY();
+        GuiDraw.surface(ctx, x, y, 92, 20, 4, ClickGuiPalette.PRIMARY, opacity);
+        String title = "Configs";
+        label(ctx, title, x + (92 - textRenderer.getWidth(title)) / 2, y + 6, ClickGuiPalette.TEXT);
     }
     private void renderSettingTooltip(DrawContext ctx, long now) {
         if (closing || bindingModule != null) {
@@ -274,6 +309,11 @@ public class LimitlessClickGUI extends Screen {
         }
         double mx = local(click.x()), my = local(click.y());
         mouseX = mx; mouseY = my;
+        if (settingsModule == null && click.button() == 0 && GuiDraw.inside(mx, my, configsX(), configsY(), 92, 20)) {
+            saveState();
+            if (client != null) client.setScreen(new ConfigScreen(this));
+            return true;
+        }
         if (settingsModule != null && drawer != null) {
             if (!drawer.contains(mx, my) || GuiDraw.inside(mx, my, drawer.x() + drawer.width() - 28, drawer.y() + 5, 24, 25)) {
                 closeSettings(); return true;
@@ -281,6 +321,11 @@ public class LimitlessClickGUI extends Screen {
             clearFocus();
             if (click.button() == 0 && GuiDraw.inside(mx, my, drawer.x() + 10, drawer.y() + 53, drawer.width() - 20, 26)) {
                 bindingModule = settingsModule; return true;
+            }
+            if (click.button() == 0 && settingsModule instanceof CustomSky
+                    && GuiDraw.inside(mx, my, drawer.x() + 12, drawer.y() + 138, drawer.width() - 24, 21)) {
+                skyPreviewNight = mx >= drawer.x() + drawer.width() / 2;
+                return true;
             }
             if (overSettings(mx, my)) for (SettingComponent c : components) if (c.isVisible() && c.mouseClicked(mx, my, click.button())) {
                 draggingSetting = click.button() == 0 ? c : null; break;

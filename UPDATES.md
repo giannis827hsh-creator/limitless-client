@@ -1,15 +1,18 @@
 # Update log
 
-## 1.25v — in progress
+## Update 1.25v – Patch Notes (in progress)
 
-- Arranged the ClickGUI panels as Combat, Misc, Donut, Basefinder, Visuals, and Client, with Search in its own panel at the right. Existing panel positions reset once to show the new layout; later dragging still saves normally. The layout needs an in-game appearance check.
-- Adjusted the HUD watermark and active module list to a middle size, with a Size control for the module list. Made ClickGUI search compact and removed its branding card. The gameplay watermark and active module list hide while editing modules. Appearance needs an in-game check.
-- Remade the ClickGUI and in-game HUD cards with black surfaces, subtle purple glow, clearer labels, and animated controls while keeping the separate category panels and their shapes.
-- Added module search across category panels.
-- Restyled the Block ESP picker, player/spawner nametags, Region Map, Spawner Notifier, Player Detection, staff cards, watermark, active module list, and Target HUD.
-- The watermark now displays the actual client version. Target HUD fades use elapsed time for consistent animation across frame rates.
-- Visual appearance and input still need an in-game check.
-- Off-screen tracers no longer share a 24-direction limit. This change builds successfully but still needs an in-game check.
+```text
++ Added Pearl Trajectory with a landing marker, color, and through-wall options.
++ Added Configs to save, load, and share module setups with a code.
++ Added Armor HUD for armor and held-item durability.
++ Added Custom Sky with day, night, and dawn palettes, aurora and nebula effects, and shooting stars.
++ Added Spotify Hub with album art, playback controls, progress, and lyrics.
++ Added module search and rearranged the ClickGUI category panels.
++ Updated the ClickGUI, HUD, and overlays with the black-and-purple design.
+```
+
+Build verification passed. Gameplay and visual behavior still need checking in Minecraft.
 
 ## 1.15v — November 4, 2026
 

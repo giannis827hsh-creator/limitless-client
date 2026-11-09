@@ -11,6 +11,7 @@
     "KeyboardInputMixin",
     "MouseMixin",
     "SpawnerLogicAccessor",
+    "SkyRenderingMixin",
     "EntityRendererMixin",
     "MinecraftClientMixin",
     "GameRendererMixin",

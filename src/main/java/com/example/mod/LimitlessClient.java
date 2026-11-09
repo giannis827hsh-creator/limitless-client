@@ -1,6 +1,7 @@
 package com.example.mod;
 
 import com.example.mod.module.DonutOnlineAdmins;
+import com.example.mod.module.CustomSky;
 import com.example.mod.module.DonutStaffDetector;
 import com.example.mod.module.Freecam;
 import com.example.mod.module.Freelook;
@@ -26,6 +27,7 @@ public final class LimitlessClient implements ClientModInitializer {
     public static volatile Freecam FREECAM;
     public static volatile Freelook FREELOOK;
     public static volatile Fullbright FULLBRIGHT;
+    public static volatile CustomSky CUSTOM_SKY;
     public static volatile DonutStaffDetector DONUT_DETECTOR;
     public static volatile DonutOnlineAdmins ONLINE_ADMINS;
     public static volatile SkinOverride SKIN_OVERRIDE;

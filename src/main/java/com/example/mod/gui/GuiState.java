@@ -93,6 +93,7 @@ public final class GuiState {
         for (Module module : modules.all()) {
             String value = properties.getProperty("bind." + module.name());
             if (value == null && module.name().equals("Anti Vanish")) value = properties.getProperty("bind.Staff Detector");
+            if (value == null && module.name().equals("Armor HUD")) value = properties.getProperty("bind.Gear HUD");
             if (value != null) {
                 try {
                     int key = Integer.parseInt(value);
@@ -107,6 +108,8 @@ public final class GuiState {
             }
             for (Setting setting : module.settings()) {
                 String saved = properties.getProperty("setting." + module.name() + "." + setting.name());
+                if (saved == null && module.name().equals("Armor HUD"))
+                    saved = properties.getProperty("setting.Gear HUD." + setting.name());
                 if (saved == null) continue;
                 try {
                     if (setting instanceof StringSetting string) string.set(saved);
@@ -138,6 +141,8 @@ public final class GuiState {
         restorePending = false;
         for (Module module : modules.all()) {
             String saved = properties.getProperty("enabled." + module.name());
+            if (saved == null && module.name().equals("Armor HUD"))
+                saved = properties.getProperty("enabled.Gear HUD");
             if ("true".equals(saved)) module.setEnabled(true);
             else if (saved != null && !"false".equals(saved))
                 LOGGER.warn("Ignoring invalid enabled state for {}", module.name());
@@ -145,6 +150,35 @@ public final class GuiState {
     }
 
     public void restoreOnNextJoin() { restorePending = true; }
+
+    public Properties snapshot(ModuleManager modules) {
+        saveModules(modules);
+        Properties snapshot = new Properties();
+        for (String key : properties.stringPropertyNames()) {
+            if (isModuleKey(key)) snapshot.setProperty(key, properties.getProperty(key));
+        }
+        return snapshot;
+    }
+
+    public void applyConfig(Properties config, ModuleManager modules, MinecraftClient client) {
+        modules.disableAll();
+        for (String key : properties.stringPropertyNames())
+            if (isModuleKey(key)) properties.remove(key);
+        for (String key : config.stringPropertyNames()) {
+            if (isModuleKey(key)) properties.setProperty(key, config.getProperty(key));
+        }
+        loadModules(modules);
+        restorePending = client.player == null || client.world == null;
+        if (!restorePending) {
+            for (Module module : modules.all())
+                if ("true".equals(properties.getProperty("enabled." + module.name()))) module.setEnabled(true);
+        }
+        saveModules(modules);
+    }
+
+    private static boolean isModuleKey(String key) {
+        return key.startsWith("bind.") || key.startsWith("enabled.") || key.startsWith("setting.");
+    }
 
     /** Call on drag release, binding changes, or screen removal to persist current state. */
     public void saveModules(ModuleManager modules) {

@@ -57,6 +57,22 @@ final class EspRenderLayers {
             RenderSetup.builder(TERRAIN_HIGHLIGHT_PIPELINE).translucent().build()
     );
 
+    private static final RenderPipeline SKY_EFFECTS_PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+                    .withLocation(Identifier.of("limitless", "pipeline/sky_effects"))
+                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
+                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+                    .withDepthWrite(false)
+                    .withBlend(BlendFunction.TRANSLUCENT)
+                    .withCull(false)
+                    .build()
+    );
+
+    static final RenderLayer SKY_EFFECTS = RenderLayer.of(
+            "limitless_sky_effects",
+            RenderSetup.builder(SKY_EFFECTS_PIPELINE).translucent().build()
+    );
+
     private EspRenderLayers() {}
 }
 

@@ -10,6 +10,7 @@ import com.example.mod.module.AutoSell;
 import com.example.mod.module.AutoTool;
 import com.example.mod.module.AutoWalk;
 import com.example.mod.module.BlockESP;
+import com.example.mod.module.CustomSky;
 import com.example.mod.module.DonutOnlineAdmins;
 import com.example.mod.module.DonutStaffDetector;
 import com.example.mod.module.DiscordPresence;
@@ -20,6 +21,7 @@ import com.example.mod.module.Freecam;
 import com.example.mod.module.Freelook;
 import com.example.mod.module.Fullbright;
 import com.example.mod.module.GlowESP;
+import com.example.mod.module.ArmorHUD;
 import com.example.mod.module.HoleESP;
 import com.example.mod.module.ItemESP;
 import com.example.mod.module.LightESP;
@@ -27,11 +29,13 @@ import com.example.mod.module.ModuleKeybinds;
 import com.example.mod.module.ModuleManager;
 import com.example.mod.module.Nametags;
 import com.example.mod.module.PlayerDetection;
+import com.example.mod.module.PearlTrajectory;
 import com.example.mod.module.RegionMap;
 import com.example.mod.module.ShieldBreaker;
 import com.example.mod.module.SkinOverride;
 import com.example.mod.module.SpawnerNotifier;
 import com.example.mod.module.SpawnerNametags;
+import com.example.mod.module.SpotifyHub;
 import com.example.mod.module.StorageESP;
 import com.example.mod.module.Sprint;
 import com.example.mod.module.SusChunk;
@@ -69,6 +73,8 @@ public final class LimitlessRuntime {
         TargetESP targetEsp = new TargetESP();
         ArrayListModule arrayList = new ArrayListModule();
         TargetHUD targetHud = new TargetHUD();
+        ArmorHUD armorHud = new ArmorHUD();
+        PearlTrajectory pearlTrajectory = new PearlTrajectory();
         SpawnerNotifier spawnerNotifier = new SpawnerNotifier();
         SpawnerNametags spawnerNametags = new SpawnerNametags();
         AutoEat autoEat = new AutoEat();
@@ -82,12 +88,14 @@ public final class LimitlessRuntime {
         AutoSell autoSell = new AutoSell();
         TpaMacro tpaMacro = new TpaMacro();
         DiscordPresence discordPresence = new DiscordPresence();
+        SpotifyHub spotifyHub = new SpotifyHub();
         ShieldBreaker shieldBreaker = new ShieldBreaker();
         TriggerBot triggerBot = new TriggerBot();
         LimitlessClient.MODULES = modules;
         LimitlessClient.FREECAM = new Freecam();
         LimitlessClient.FREELOOK = new Freelook();
         LimitlessClient.FULLBRIGHT = new Fullbright();
+        LimitlessClient.CUSTOM_SKY = new CustomSky();
         LimitlessClient.SKIN_OVERRIDE = new SkinOverride();
         LimitlessClient.SUS_CHUNK = new SusChunk();
         LimitlessClient.WATERMARK = new WatermarkHUD();
@@ -100,6 +108,7 @@ public final class LimitlessRuntime {
         modules.add(LimitlessClient.FREECAM);
         modules.add(LimitlessClient.FREELOOK);
         modules.add(LimitlessClient.FULLBRIGHT);
+        modules.add(LimitlessClient.CUSTOM_SKY);
         modules.add(LimitlessClient.SKIN_OVERRIDE);
         modules.add(blockEsp);
         modules.add(storageEsp);
@@ -112,6 +121,8 @@ public final class LimitlessRuntime {
         modules.add(arrayList);
         modules.add(LimitlessClient.WATERMARK);
         modules.add(targetHud);
+        modules.add(armorHud);
+        modules.add(pearlTrajectory);
         modules.add(LimitlessClient.DONUT_DETECTOR);
         modules.add(LimitlessClient.ONLINE_ADMINS);
         modules.add(spawnerNotifier);
@@ -127,6 +138,7 @@ public final class LimitlessRuntime {
         modules.add(autoSell);
         modules.add(tpaMacro);
         modules.add(discordPresence);
+        modules.add(spotifyHub);
         modules.add(shieldBreaker);
         modules.add(triggerBot);
         GuiState.INSTANCE.loadModules(modules);
@@ -177,12 +189,19 @@ public final class LimitlessRuntime {
             autoSell.tick(client);
             tpaMacro.tick(client);
             discordPresence.tick(client);
+            spotifyHub.tick(client);
             shieldBreaker.tick(client);
             if (!shieldBreaker.actedThisTick()) triggerBot.tick(client);
             LimitlessClient.WATERMARK.tick(client);
         });
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             if (LicenseManager.isLicensed()) esp.renderWorld(context);
+        });
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+            if (LicenseManager.isLicensed()) pearlTrajectory.renderWorld(context);
+        });
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+            if (LicenseManager.isLicensed()) LimitlessClient.CUSTOM_SKY.renderWorld(context);
         });
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             if (LicenseManager.isLicensed()) blockEsp.renderWorld(context);
@@ -258,6 +277,9 @@ public final class LimitlessRuntime {
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "target_hud"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) targetHud.renderHud(context, ticks);
         });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "armor_hud"), (context, ticks) -> {
+            if (LicenseManager.isLicensed()) armorHud.renderHud(context, ticks);
+        });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "donut_online_admins"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) LimitlessClient.ONLINE_ADMINS.renderHud(context, ticks);
         });
@@ -269,6 +291,9 @@ public final class LimitlessRuntime {
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "spawner_nametags"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) spawnerNametags.renderHud(context, ticks);
+        });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "spotify_hub"), (context, ticks) -> {
+            if (LicenseManager.isLicensed()) spotifyHub.renderHud(context, ticks);
         });
     }
 }
