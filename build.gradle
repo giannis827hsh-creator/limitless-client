@@ -36,7 +36,7 @@ java {
 
 tasks.named('jar') {
     destinationDirectory.set(layout.buildDirectory.dir('intermediates'))
-    from(files('LICENSE', 'THIRD_PARTY_NOTICES.md')) { into 'META-INF' }
+    from(files('LICENSE')) { into 'META-INF' }
 }
 tasks.named('remapJar') {
     destinationDirectory.set(layout.buildDirectory.dir('libs'))

@@ -43,4 +43,4 @@ If you report a bug, include your Minecraft and Fabric versions, the steps to re
 
 limitless client is licensed under [GPL-3.0-only](LICENSE).
 
-Some code was adapted from Anubis 0.9.9 and 1.0 (GPL-3.0-only), which lists 4ldenz as an author.
+Some code was adapted from Anubis 0.9.9 and 1.0 (GPL-3.0-only).
