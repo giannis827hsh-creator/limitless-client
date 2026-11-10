@@ -66,7 +66,7 @@ public final class BlockESP extends Module {
     public BlockESP() {
         super("Block ESP", false, Category.VISUALS);
         scanRadius.describe("Search distance in blocks around your player. Larger ranges take longer to scan.");
-        tracers.describe("Draw thin lines from the crosshair to selected blocks on screen.");
+        tracers.describe("Draw thin lines from the crosshair toward selected blocks.");
         blockColor.describe("Default outline and tracer color for selected blocks.");
         selectedBlockIds.visibleWhen(() -> false);
         savedColors.visibleWhen(() -> false);

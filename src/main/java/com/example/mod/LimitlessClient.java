@@ -1,6 +1,7 @@
 package com.example.mod;
 
 import com.example.mod.module.DonutOnlineAdmins;
+import com.example.mod.api.AddonRegistry;
 import com.example.mod.module.CustomSky;
 import com.example.mod.module.DonutStaffDetector;
 import com.example.mod.module.Freecam;
@@ -24,6 +25,7 @@ import java.util.function.Supplier;
 public final class LimitlessClient implements ClientModInitializer {
     public static final String MOD_ID = "limitless";
     public static volatile ModuleManager MODULES;
+    public static volatile AddonRegistry ADDONS;
     public static volatile Freecam FREECAM;
     public static volatile Freelook FREELOOK;
     public static volatile Fullbright FULLBRIGHT;

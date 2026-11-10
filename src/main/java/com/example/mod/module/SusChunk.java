@@ -16,6 +16,7 @@ import com.example.mod.setting.IntegerSetting;
 import com.example.mod.setting.NumberSetting;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -536,14 +537,13 @@ public final class SusChunk extends Module {
                 .formatted(Formatting.RED), false);
     }
 
-    /** Cached height samples avoid world scans during rendering; only top faces are emitted. */
     public void renderWorld(WorldRenderContext context) {
         if (!isEnabled() || renderedFlags.isEmpty()) return;
         MatrixStack matrices = context.matrices();
         VertexConsumerProvider consumers = context.consumers();
         if (matrices == null || consumers == null) return;
         Vec3d camera = context.worldState().cameraRenderState.pos;
-        VertexConsumer fills = consumers.getBuffer(EspRenderLayers.TERRAIN_HIGHLIGHT);
+        VertexConsumer fills = consumers.getBuffer(EspRenderLayers.FILLED_THROUGH_WALLS);
         matrices.push();
         try {
             matrices.translate(-camera.x, -camera.y, -camera.z);
@@ -555,23 +555,11 @@ public final class SusChunk extends Module {
                 int rgb = flag.signal == null ? highlightColor.get() & 0x00ffffff : signalColor(flag.signal);
                 int fillColor = rgb | (opacity.get() * 255 / 100 << 24);
                 int lineColor = rgb | 0xdd000000;
-                if (!followTerrain.get()) {
-                    float left = sx + 16f * flag.slot / flag.stripes;
-                    float right = sx + 16f * (flag.slot + 1) / flag.stripes;
-                    face(matrices.peek(), fills, left, flatHeight.get() + 0.04f, sz, right, sz + 16, fillColor);
-                    if (border.get() && flag.stripes == 1) perimeter(matrices.peek(), fills, sx, flatHeight.get() + 0.05f, sz, lineColor);
-                    continue;
-                }
-                for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-                    if (x % flag.stripes != flag.slot) continue;
-                    float y = snapshot.surface[index(x, z)] + 0.035f;
-                    face(matrices.peek(), fills, sx + x, y, sz + z, sx + x + 1, sz + z + 1, fillColor);
-                    if (!border.get()) continue;
-                    if (x == 0) face(matrices.peek(), fills, sx, y + 0.01f, sz + z, sx + 0.05f, sz + z + 1, lineColor);
-                    if (x == 15) face(matrices.peek(), fills, sx + 15.95f, y + 0.01f, sz + z, sx + 16, sz + z + 1, lineColor);
-                    if (z == 0) face(matrices.peek(), fills, sx + x, y + 0.01f, sz, sx + x + 1, sz + 0.05f, lineColor);
-                    if (z == 15) face(matrices.peek(), fills, sx + x, y + 0.01f, sz + 15.95f, sx + x + 1, sz + 16, lineColor);
-                }
+                float y = (followTerrain.get() ? snapshot.flatSurfaceY : flatHeight.get()) + 0.04f;
+                float left = sx + 16f * flag.slot / flag.stripes;
+                float right = sx + 16f * (flag.slot + 1) / flag.stripes;
+                face(matrices.peek(), fills, left, y, sz, right, sz + 16, fillColor);
+                if (border.get() && flag.stripes == 1) perimeter(matrices.peek(), fills, sx, y + 0.01f, sz, lineColor);
             }
         } finally { matrices.pop(); }
     }
@@ -806,12 +794,16 @@ public final class SusChunk extends Module {
         final List<Placement> placements;
         final boolean structureContext, geodesOverflow;
         final int[] surface;
+        final int flatSurfaceY;
         final SectionData[] sectionData;
         final int geometrySignature;
         Snapshot(ChunkWork work, int[] surface, long ticks) {
             key = work.key; source = work.source; scannedAt = ticks; counts = work.counts;
             tracked = Map.copyOf(work.tracked); geodes = Map.copyOf(work.geodes); placements = List.copyOf(work.placements);
             structureContext = work.structureContext(); geodesOverflow = work.geodesOverflow; this.surface = surface;
+            int[] sortedSurface = surface.clone();
+            Arrays.sort(sortedSurface);
+            flatSurfaceY = sortedSurface[sortedSurface.length / 2];
             sectionData = work.sectionData.clone();
             lastFullScanAt = work.fullScan ? ticks : work.lastFullScanAt;
             geometrySignature = work.geometrySignature;

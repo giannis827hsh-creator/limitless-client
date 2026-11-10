@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "limitless_hello_addon",
+  "version": "${version}",
+  "name": "limitless hello addon",
+  "license": "GPL-3.0-only",
+  "environment": "client",
+  "entrypoints": {
+    "limitless:addon": ["com.example.limitlessaddon.HelloAddon"]
+  },
+  "depends": {
+    "limitless": "*",
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

@@ -1,5 +1,7 @@
 package com.example.mod.gui;
 
+import com.example.mod.api.AddonCategory;
+import com.example.mod.api.AddonModule;
 import com.example.mod.module.Module;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,7 @@ public final class CategoryPanel {
         }
     }
     private final Tab tab;
+    private final String id, title;
     private final List<ModuleButton> buttons = new ArrayList<>();
     private List<ModuleButton> filtered = List.of();
     private final List<SettingComponent> inlineSettings = new ArrayList<>();
@@ -36,7 +39,25 @@ public final class CategoryPanel {
     public void reserveTop(int top) { reservedTop = top; }
     public CategoryPanel(Tab tab, List<Module> modules) {
         this.tab = tab;
-        for (Module module : modules) if (tab.accepts(module)) buttons.add(new ModuleButton(module));
+        this.id = tab.name();
+        this.title = switch (tab) {
+            case HUB -> "Client";
+            case RENDER -> "Visuals";
+            case BASEFINDER -> "Basefinder";
+            default -> tab.name().charAt(0) + tab.name().substring(1).toLowerCase(java.util.Locale.ROOT);
+        };
+        for (Module module : modules)
+            if (tab.accepts(module) && (!(module instanceof AddonModule addon) || addon.addonCategory() == null))
+                buttons.add(new ModuleButton(module));
+        filtered = List.copyOf(buttons);
+    }
+    public CategoryPanel(AddonCategory category, List<Module> modules) {
+        this.tab = null;
+        this.id = "ADDON." + category.id();
+        this.title = category.title();
+        for (Module module : modules)
+            if (module instanceof AddonModule addon && category.id().equals(addon.addonCategory()))
+                buttons.add(new ModuleButton(module));
         filtered = List.copyOf(buttons);
     }
     public void filter(String query) {
@@ -49,6 +70,7 @@ public final class CategoryPanel {
         scroll = 0;
     }
     public Tab tab() { return tab; }
+    public String id() { return id; }
     public ClickGuiLayout.Rect bounds() { return bounds; }
     public double x() { return x; }
     public double y() { return y; }
@@ -134,12 +156,6 @@ public final class CategoryPanel {
         GuiDraw.surface(ctx, x, y, w, h, 5, ClickGuiPalette.PRIMARY, opacity);
         if (headerContains(mx, my)) GuiDraw.rounded(ctx, x + 2, y + 2, w - 4, ClickGuiLayout.HEADER - 4, 3,
                 GuiDraw.fade(ClickGuiPalette.HEADER_HOVER, opacity));
-        String title = switch (tab) {
-            case HUB -> "Client";
-            case RENDER -> "Visuals";
-            case BASEFINDER -> "Basefinder";
-            default -> tab.name().charAt(0) + tab.name().substring(1).toLowerCase(java.util.Locale.ROOT);
-        };
         GuiDraw.rounded(ctx, x + 8, y + 8, 3, 3, 1, GuiDraw.fade(ClickGuiPalette.PRIMARY, opacity));
         GuiDraw.text(ctx, font, title, x + 17, y + (ClickGuiLayout.HEADER - 8) / 2,
                 GuiDraw.fade(ClickGuiPalette.TEXT, opacity));

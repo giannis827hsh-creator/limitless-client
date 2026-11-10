@@ -24,7 +24,7 @@ On macOS or Linux:
 ./gradlew limitlessRelease
 ```
 
-Copy `build/libs/limitless-client-1.25v.jar` into the instance's `mods` folder. A prebuilt JAR is also available on the [GitHub releases page](https://github.com/giannis827hsh-creator/limitless-client/releases).
+Copy `build/libs/limitless-client-1.26v.jar` into the instance's `mods` folder. Published builds are on the [GitHub releases page](https://github.com/giannis827hsh-creator/limitless-client/releases).
 
 ## Modules
 
@@ -34,6 +34,10 @@ Copy `build/libs/limitless-client-1.25v.jar` into the instance's `mods` folder. 
 - **DonutSMP:** Region Map, Anti Vanish, staff alerts, Auto Sell, and TPA macros.
 
 See [UPDATES.md](UPDATES.md) for recent additions. World scanners can only use chunks and entity data sent to the client.
+
+## Addons
+
+Other Fabric mods can register modules, custom category panels, client commands, HUD elements, and event callbacks. The API and a buildable starter addon are in [examples/hello-addon](examples/hello-addon). See the [addon guide](docs/addons.md) for setup and available callbacks.
 
 ## Contributing
 

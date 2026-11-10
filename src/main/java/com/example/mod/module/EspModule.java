@@ -42,7 +42,7 @@ public final class EspModule extends Module {
     public EspModule() {
         super("Entity ESP", false);
         renderBoxes.describe("Draw a box around matching living entities, visible through walls.");
-        renderTracers.describe("Draw thin lines from your crosshair to matching entities visible on screen.");
+        renderTracers.describe("Draw thin lines from your crosshair toward matching entities.");
         playersOnly.describe("Only highlight other players. Turn off to include mobs and animals.");
         players.describe("Highlight other players.");
         hostileMobs.describe("Highlight hostile mobs separately from passive mobs.");
@@ -124,7 +124,6 @@ public final class EspModule extends Module {
         }
     }
 
-    /** Collect tracer targets for the next world render pass. */
     public void renderHud(DrawContext context, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!isEnabled() || !renderTracers.get() || client.world == null || client.player == null

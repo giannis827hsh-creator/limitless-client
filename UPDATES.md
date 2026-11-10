@@ -1,5 +1,13 @@
 # Update log
 
+## Update 1.26v – Patch Notes (mini update)
+
+```text
++ Added an addon API for separate Fabric mods.
++ Added custom addon categories, client commands, HUD elements, and event callbacks.
++ Added a buildable hello addon example and setup guide.
+```
+
 ## Update 1.25v – Patch Notes (in progress)
 
 ```text

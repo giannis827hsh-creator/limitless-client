@@ -37,7 +37,7 @@ public final class ItemESP extends Module {
     public ItemESP() {
         super("Item ESP", false, Category.VISUALS);
         boxes.describe("Outline dropped items in loaded chunks, including behind blocks.");
-        tracers.describe("Draw short screen tracers from the crosshair to on-screen dropped items.");
+        tracers.describe("Draw thin lines from the crosshair toward dropped items.");
         range.describe("Maximum distance to dropped items, measured from your player.");
         maxItems.describe("Maximum number of nearby items to highlight per frame.");
         itemFilter.describe("Optional comma-separated item IDs, such as diamond, netherite_ingot. Empty shows every item.");

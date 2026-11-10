@@ -1,6 +1,10 @@
 package com.example.mod.runtime;
 
 import com.example.mod.LimitlessClient;
+import com.example.mod.api.AddonModule;
+import com.example.mod.api.AddonRegistry;
+import com.example.mod.api.AddonHudElement;
+import com.example.mod.api.LimitlessAddon;
 import com.example.mod.gui.GuiState;
 import com.example.mod.license.LicenseManager;
 import com.example.mod.module.ArrayListModule;
@@ -15,7 +19,6 @@ import com.example.mod.module.DonutOnlineAdmins;
 import com.example.mod.module.DonutStaffDetector;
 import com.example.mod.module.DiscordPresence;
 import com.example.mod.module.EspModule;
-import com.example.mod.module.EspTracers;
 import com.example.mod.module.ElytraSwap;
 import com.example.mod.module.Freecam;
 import com.example.mod.module.Freelook;
@@ -49,14 +52,43 @@ import com.example.mod.module.WatermarkHUD;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
+import java.util.List;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Registers modules and client callbacks. */
 public final class LimitlessRuntime {
+    private static final Logger LOGGER = LoggerFactory.getLogger("limitless/addons");
     private LimitlessRuntime() { }
+
+    private static void runAddon(AddonModule module, Consumer<AddonModule> callback) {
+        if (!module.isEnabled()) return;
+        try {
+            callback.accept(module);
+        } catch (RuntimeException | LinkageError error) {
+            LOGGER.error("Addon module {} failed and was disabled", module.name(), error);
+            try {
+                module.setEnabled(false);
+            } catch (RuntimeException | LinkageError disableError) {
+                LOGGER.error("Could not disable addon module {}", module.name(), disableError);
+            }
+        }
+    }
+
+    private static <T> void runListener(String event, Consumer<T> listener, T value) {
+        try {
+            listener.accept(value);
+        } catch (RuntimeException | LinkageError error) {
+            LOGGER.error("Addon {} listener failed", event, error);
+        }
+    }
 
     public static void initialize() {
         ModuleManager modules = new ModuleManager();
@@ -141,6 +173,25 @@ public final class LimitlessRuntime {
         modules.add(spotifyHub);
         modules.add(shieldBreaker);
         modules.add(triggerBot);
+        AddonRegistry addons = new AddonRegistry(modules);
+        for (var entry : FabricLoader.getInstance().getEntrypointContainers("limitless:addon", LimitlessAddon.class)) {
+            try {
+                entry.getEntrypoint().onInitialize(addons);
+            } catch (RuntimeException | LinkageError error) {
+                LOGGER.error("Could not initialize addon from {}", entry.getProvider().getMetadata().getId(), error);
+            }
+        }
+        addons.close();
+        LimitlessClient.ADDONS = addons;
+        List<AddonModule> addonModules = addons.modules();
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            if (!LicenseManager.isLicensed()) return;
+            for (var command : addons.commands()) runListener("command registration", command, dispatcher);
+        });
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            if (LicenseManager.isLicensed())
+                for (var listener : addons.joins()) runListener("join", listener, client);
+        });
         GuiState.INSTANCE.loadModules(modules);
         modules.disableAll();
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
@@ -149,6 +200,7 @@ public final class LimitlessRuntime {
             LimitlessClient.FREECAM.setEnabled(false);
             modules.clearWorldState();
             ModuleKeybinds.reset();
+            for (var listener : addons.disconnects()) runListener("disconnect", listener, client);
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             GuiState.INSTANCE.saveModules(modules);
@@ -193,6 +245,10 @@ public final class LimitlessRuntime {
             shieldBreaker.tick(client);
             if (!shieldBreaker.actedThisTick()) triggerBot.tick(client);
             LimitlessClient.WATERMARK.tick(client);
+            for (AddonModule module : addonModules) {
+                runAddon(module, addon -> addon.onClientTick(client));
+            }
+            for (var listener : addons.ticks()) runListener("tick", listener, client);
         });
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             if (LicenseManager.isLicensed()) esp.renderWorld(context);
@@ -231,13 +287,15 @@ public final class LimitlessRuntime {
             if (LicenseManager.isLicensed()) spawnerNametags.renderWorld(context);
         });
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
-            if (LicenseManager.isLicensed()) EspTracers.renderWorld(context);
+            if (!LicenseManager.isLicensed()) return;
+            for (AddonModule module : addonModules) {
+                runAddon(module, addon -> addon.onWorldRender(context));
+            }
+            for (var listener : addons.worldRenders()) runListener("world render", listener, context);
         });
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "array_list"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) arrayList.renderHud(context, ticks);
         });
-        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "tracer_frame"), (context, ticks) ->
-                EspTracers.beginHudFrame(MinecraftClient.getInstance()));
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "entity_tracers"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) esp.renderHud(context, ticks);
         });
@@ -295,5 +353,23 @@ public final class LimitlessRuntime {
         HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "spotify_hub"), (context, ticks) -> {
             if (LicenseManager.isLicensed()) spotifyHub.renderHud(context, ticks);
         });
+        HudElementRegistry.addLast(Identifier.of(LimitlessClient.MOD_ID, "addon_hud"), (context, ticks) -> {
+            if (!LicenseManager.isLicensed()) return;
+            for (AddonModule module : addonModules) {
+                runAddon(module, addon -> addon.onHudRender(context, ticks));
+            }
+            var event = new AddonRegistry.HudRender(context, ticks);
+            for (var listener : addons.hudRenders()) runListener("HUD render", listener, event);
+        });
+        for (AddonHudElement element : addons.hudElements()) {
+            HudElementRegistry.addLast(element.id(), (context, ticks) -> {
+                if (!LicenseManager.isLicensed()) return;
+                try {
+                    element.render(context, ticks);
+                } catch (RuntimeException | LinkageError error) {
+                    LOGGER.error("Addon HUD {} failed", element.id(), error);
+                }
+            });
+        }
     }
 }

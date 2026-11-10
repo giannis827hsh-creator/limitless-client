@@ -43,6 +43,9 @@ public class LimitlessClickGUI extends Screen {
         super(Text.literal(Brand.NAME));
         for (CategoryPanel.Tab tab : CategoryPanel.Tab.values())
             panels.add(new CategoryPanel(tab, LimitlessClient.MODULES.all()));
+        if (LimitlessClient.ADDONS != null)
+            for (var category : LimitlessClient.ADDONS.categories())
+                panels.add(new CategoryPanel(category, LimitlessClient.MODULES.all()));
     }
 
     @Override protected void init() {
@@ -50,21 +53,23 @@ public class LimitlessClickGUI extends Screen {
         viewportWidth = (int) (width / scale);
         viewportHeight = (int) (height / scale);
         int left = (viewportWidth - ClickGuiLayout.GROUP_WIDTH) / 2;
-        for (CategoryPanel panel : panels) {
+        for (int order = 0; order < panels.size(); order++) {
+            CategoryPanel panel = panels.get(order);
             panel.reserveTop(8);
-            int order = panel.tab().ordinal();
-            double defaultX = left + order * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
-            double px = initialized ? panel.x() : GuiState.INSTANCE.panelX(panel.tab().name(),
+            double defaultX = left + (order < 6 ? order : (order - 6) % 7)
+                    * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
+            double defaultY = order < 6 ? 30 : 190 + ((order - 6) / 7) * 165;
+            double px = initialized ? panel.x() : GuiState.INSTANCE.panelX(panel.id(),
                     defaultX, viewportWidth - ClickGuiLayout.PANEL_WIDTH - 16);
-            double py = initialized ? panel.y() : GuiState.INSTANCE.panelY(panel.tab().name(),
-                    30, viewportHeight - ClickGuiLayout.HEADER - 16);
+            double py = initialized ? panel.y() : GuiState.INSTANCE.panelY(panel.id(),
+                    defaultY, viewportHeight - ClickGuiLayout.HEADER - 16);
             panel.position(px, py, viewportWidth, viewportHeight);
         }
         initialized = true; draggingPanel = null;
         clearFocus(); pressedKeys.clear(); lastFrame = System.nanoTime();
         layoutDrawer();
         String query = searchBox == null ? "" : searchBox.getText();
-        searchX = left + panels.size() * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
+        searchX = left + 6 * (ClickGuiLayout.PANEL_WIDTH + ClickGuiLayout.GAP);
         searchY = 30;
         int searchWidth = ClickGuiLayout.PANEL_WIDTH - 16;
         searchBox = null;
@@ -434,7 +439,7 @@ public class LimitlessClickGUI extends Screen {
     }
     private void saveState() {
         if (!initialized) return;
-        for (CategoryPanel panel : panels) GuiState.INSTANCE.panelPosition(panel.tab().name(), panel.x(), panel.y(),
+        for (CategoryPanel panel : panels) GuiState.INSTANCE.panelPosition(panel.id(), panel.x(), panel.y(),
                 viewportWidth - ClickGuiLayout.PANEL_WIDTH - 16, viewportHeight - ClickGuiLayout.HEADER - 16);
         GuiState.INSTANCE.saveModules(LimitlessClient.MODULES);
     }
